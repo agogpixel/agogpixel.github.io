@@ -1,4 +1,4 @@
-﻿---
+---
 name: author-devlog
 description: Procedure for authoring, formatting, and publishing devlog posts in the 'Building an A- Studio in Public' series.
 ---
@@ -8,18 +8,21 @@ description: Procedure for authoring, formatting, and publishing devlog posts in
 Follow this workflow when writing a new devlog post:
 
 1. **Create MDX File**:
-   - File path: \src/content/devlog/YYYY-MM-DD-<slug>.mdx\.
+   - File path: `src/content/devlog/<NNN>-<slug>.mdx` (e.g., `001-scaffold-astro-portal.mdx`).
 2. **Frontmatter Setup**:
-   \\\yaml
+   ```yaml
+   ---
    title: "Devlog Title"
    pubDate: YYYY-MM-DD
-   track: "Track 1: Web & Devlog"
-   tags: ["devlog", "godot", "subagents"]
-   author: "kidthales & Antigravity"
-   summary: "Short punchy summary."
-   \\\
+   track: "Building an A- Studio in Public"
+   tags: ["web", "astro", "engineering"]
+   author: "Agogpixel Team"
+   summary: "Short punchy summary for catalog cards, SEO meta, and RSS description."
+   ---
+   ```
+   - *Guardrail*: Adhere to `studio_alignment.md` public copy rules (no public AI labeling in `author` or body copy).
 3. **Image & Media Optimization**:
-   - Use WebP or animated GIF/SVG for visuals.
-   - Embed captions highlighting human + AI co-development milestones.
-4. **Build Verification**:
-   - Run \pnpm build\ to ensure zero MDX or asset compilation errors.
+   - Place static media in `public/assets/` and reference via `/assets/<filename>`.
+   - Use WebP or animated SVG/GIF for visuals.
+4. **Build & RSS Verification**:
+   - Run `npm run build` (`astro check && astro build`) to verify zero TypeScript/MDX errors and confirm `/devlogs/<slug>/index.html` and `/rss.xml` generate cleanly.

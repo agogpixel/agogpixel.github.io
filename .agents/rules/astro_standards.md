@@ -18,17 +18,20 @@ All web styles and Tailwind tokens must conform strictly to the studio brand spe
 - **Rocket Scarlet**: `#E63946` (Alerts, combat highlights, badges)
 - **Starlight White**: `#EEEEEE` (Body typography, primary headings)
 
-## Viewport & Single-Page Layout Standards
-- **Single-Viewport Fit**: For hero/jumbotron landing pages, the full layout (Header + Hero + Footer) must fit within `100vh` / `100dvh` without vertical scrolling on desktop.
-- Use `h-screen min-h-[100dvh]` with `md:overflow-y-hidden` on the layout body.
+## Viewport & Layout Scrolling Standards
+- **Single-Viewport Fit (Landing Hero)**: For hero/jumbotron landing pages (`src/pages/index.astro`), the full layout (Header + Hero + Footer) must fit within `100vh` / `100dvh` without vertical scrolling on desktop (`scrollable={false}` default on `Layout.astro`, which applies `h-screen min-h-[100dvh]` with `md:overflow-y-hidden`).
+- **Scrollable Content Pages**: Long-form and multi-card routes (`/devlogs`, `/devlogs/[...slug]`) MUST pass `scrollable={true}` to `<Layout scrollable={true}>` so `body` switches to `min-h-screen min-h-[100dvh] overflow-y-auto` and allows vertical scrolling on desktop.
 - Keep footer padding compact (`py-4` max) and scale vector mascots proportionally.
 
 ## Mascot & Asset Synchronization
 - Always use the latest vector animated mascot (`rocket_guinea_pig_animated.svg`) synced directly from `agogpixel-studio/docs/branding/assets/`.
 
-## Content Collections & Devlogs
-- Devlogs live in `src/content/devlog/`.
+## Content Collections, MDX Typography & RSS Pipeline
+- Devlogs live in `src/content/devlog/` and are validated by `src/content/config.ts`.
 - Mandatory frontmatter: `title`, `pubDate`, `track`, `tags`, `author`, `summary`.
+- **UTC-Safe Date Formatting**: YAML `YYYY-MM-DD` dates parse as `00:00:00 UTC`. Always format `pubDate` with `timeZone: 'UTC'` in `toLocaleDateString()` so local/CI timezone offsets never shift displayed publication dates backward by one day.
+- **Tailwind Typography**: `@tailwindcss/typography` must be registered in `tailwind.config.mjs` (`plugins: [typography]`) and styled on `<Content />` wrappers via `prose prose-invert`.
+- **RSS 2.0 Feed**: `src/pages/rss.xml.ts` uses `@astrojs/rss` and `site: 'https://agogpixel.com'` in `astro.config.mjs` to pre-render `/rss.xml` with canonical `/devlogs/${post.slug}/` links.
 - Static and public media assets must be placed in `public/assets/`. Do NOT store redundant copies in `src/assets/`.
 
 ## GitHub Pages Deployment Standard
