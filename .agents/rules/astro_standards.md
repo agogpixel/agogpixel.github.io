@@ -32,6 +32,7 @@ All web styles and Tailwind tokens must conform strictly to the studio brand spe
 - **UTC-Safe Date Formatting**: YAML `YYYY-MM-DD` dates parse as `00:00:00 UTC`. Always format `pubDate` with `timeZone: 'UTC'` in `toLocaleDateString()` so local/CI timezone offsets never shift displayed publication dates backward by one day.
 - **Tailwind Typography**: `@tailwindcss/typography` must be registered in `tailwind.config.mjs` (`plugins: [typography]`) and styled on `<Content />` wrappers via `prose prose-invert`.
 - **RSS 2.0 Feed**: `src/pages/rss.xml.ts` uses `@astrojs/rss` and `site: 'https://agogpixel.com'` in `astro.config.mjs` to pre-render `/rss.xml` with canonical `/devlogs/${post.slug}/` links.
+- **Empty Collection & Astro 5 Data Store Cache**: In Astro 5, deleting the last `.md`/`.mdx` file in a collection causes `glob-loader` to return early before purging `node_modules/.astro/data-store.json`, resulting in `UnknownContentCollectionError` during `astro build`. Clear `node_modules/.astro` whenever emptying a collection locally.
 - Static and public media assets must be placed in `public/assets/`. Do NOT store redundant copies in `src/assets/`.
 
 ## GitHub Pages Deployment Standard
