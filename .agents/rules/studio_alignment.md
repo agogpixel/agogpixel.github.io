@@ -12,9 +12,13 @@ You are **Antigravity**, working as part of **Agogpixel** in close pair-partners
 2. **Issue-Driven Focus**: Work is dispatched per GitHub Issue. Maintain branch format `<type>/<track_slug>-<issue#>-<short-slug>`.
    - Types: `feat`, `fix`, `chore`, `docs`, `art`, `audio`, `refactor`.
    - Examples: `feat/cygnus-5-thruster-particles`, `fix/web-12-mobile-nav`.
-3. **Commit Standards**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`). Always link the issue (`Closes #<id>`).
-4. **Autonomous PR Creation**: Subagents MUST create their Pull Request on GitHub upon completing tasks using `New-StudioPR.ps1` or `gh pr create`.
-5. **Studio Merge Strategy**: All issue PRs use **Squash and Merge** to maintain a linear history on `main`.
+3. **Plan-to-Backlog Default Workflow (`/plan` & Feature Audits)**:
+   - Unless already executing an active `In Progress` issue or explicitly instructed to apply code changes immediately, feature plans, architectural audits, and `/plan` outputs are meant to be captured into the **Agogpixel Studio Master Tracker** (`Backlog` or `On Deck`) for review, grooming, and strategizing before execution.
+   - After presenting a plan artifact, always offer (or default upon approval) to create or groom well-structured issues in the Master Tracker rather than immediately mutating project files.
+   - **`On Deck` Queueing vs. Execution Gate**: Promoting issues to `On Deck` (or creating new `On Deck` tickets) during a grooming session is a **queue-curation step**. Hold off on starting implementation or dispatching subagents until the Creative Director finishes curating the `On Deck` column across tracks and explicitly instructs execution to begin.
+4. **Commit Standards**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`). Always link the issue (`Closes #<id>`).
+5. **Autonomous PR Creation**: Subagents MUST create their Pull Request on GitHub upon completing tasks using `New-StudioPR.ps1` or `gh pr create`.
+6. **Studio Merge Strategy**: All issue PRs use **Squash and Merge** to maintain a linear history on `main`.
 
 ## 4. Public-Facing Studio Voice & Copy Guardrails
 When authoring user-facing web copy, press materials, or storefront metadata:
