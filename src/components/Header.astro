@@ -1,124 +1,26 @@
 ---
-interface Props {
-  currentPath?: string;
-}
-
-const { currentPath = Astro.url.pathname } = Astro.props;
-
-const navLinks = [
-  { name: 'Home', href: '/' },
-  { name: 'Games', href: '/games/' },
-  { name: 'Devlogs', href: '/devlogs/' },
-  { name: 'About', href: '/about/' },
-  { name: 'Press Kit', href: '/presskit/' },
-];
-
-const isActive = (href: string) => {
-  if (href === '/') return currentPath === '/' || currentPath === '';
-  return currentPath.startsWith(href);
-};
 ---
 
-<header class="sticky top-0 z-50 w-full border-b border-void-800/80 bg-void-950/80 backdrop-blur-md">
+<header class="w-full border-b border-cosmos-800/80 bg-cosmos-950/80 backdrop-blur-md">
   <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
     <!-- Brand / Logo -->
     <a href="/" class="group flex items-center gap-3 transition-transform hover:scale-[1.02]">
-      <div class="relative flex h-9 w-9 items-center justify-center rounded-lg border border-cyber-cyan/30 bg-void-900 p-1 shadow-sm shadow-cyber-cyan/20">
-        <img src="/assets/rocket_guinea_pig.png" alt="Agogpixel Logo" class="h-7 w-7 object-contain" />
+      <div class="relative flex h-10 w-10 items-center justify-center rounded-lg border border-brand-cyan/30 bg-cosmos-900 p-1 shadow-sm shadow-brand-cyan/20">
+        <img src="/assets/rocket_guinea_pig.png" alt="Agogpixel Logo" class="h-8 w-8 object-contain" />
       </div>
       <div class="flex flex-col">
-        <span class="font-mono text-base font-bold tracking-wider text-slate-100 group-hover:text-cyber-cyan transition-colors">
-          AGOGPIXEL<span class="text-cyber-cyan">.</span>
+        <span class="font-mono text-base font-bold tracking-wider text-brand-starlight group-hover:text-brand-cyan transition-colors">
+          AGOGPIXEL<span class="text-brand-cyan">.</span>
         </span>
         <span class="text-[10px] uppercase tracking-widest text-slate-400 font-mono -mt-1">Studio</span>
       </div>
     </a>
 
-    <!-- Desktop Navigation -->
-    <nav class="hidden md:flex items-center gap-1 font-mono text-sm">
-      {navLinks.map((link) => (
-        <a
-          href={link.href}
-          class:list={[
-            'rounded-md px-3.5 py-1.5 transition-all duration-200',
-            isActive(link.href)
-              ? 'bg-void-800 text-cyber-cyan border border-cyber-cyan/30 shadow-sm shadow-cyber-cyan/10'
-              : 'text-slate-300 hover:text-white hover:bg-void-800/60'
-          ]}
-        >
-          {link.name}
-        </a>
-      ))}
-      <a
-        href="https://github.com/agogpixel"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="ml-2 rounded-md border border-slate-700/60 bg-void-900/80 px-3 py-1.5 text-xs text-slate-300 hover:border-cyber-cyan/50 hover:text-cyber-cyan transition-colors"
-      >
-        GitHub ↗
-      </a>
-    </nav>
-
-    <!-- Mobile Hamburger Button -->
-    <div class="md:hidden flex items-center">
-      <button
-        id="mobile-menu-toggle"
-        type="button"
-        class="inline-flex items-center justify-center rounded-lg border border-void-800 bg-void-900 p-2 text-slate-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyber-cyan/50"
-        aria-label="Toggle navigation menu"
-      >
-        <svg id="hamburger-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-        <svg id="close-icon" class="hidden h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+    <!-- Status badge -->
+    <div class="flex items-center gap-2 font-mono text-xs text-brand-cyan bg-cosmos-900/90 border border-brand-cyan/30 px-3 py-1 rounded-full shadow-sm shadow-brand-cyan/10">
+      <span class="inline-block h-2 w-2 rounded-full bg-brand-cyan animate-pulse"></span>
+      <span class="hidden sm:inline">Curious Software Development</span>
+      <span class="sm:hidden">Studio</span>
     </div>
   </div>
-
-  <!-- Mobile Dropdown Menu -->
-  <div id="mobile-menu" class="hidden md:hidden border-b border-void-800 bg-void-900/95 px-4 pt-2 pb-4 space-y-1 font-mono text-sm backdrop-blur-lg">
-    {navLinks.map((link) => (
-      <a
-        href={link.href}
-        class:list={[
-          'block rounded-md px-3 py-2 transition-colors',
-          isActive(link.href)
-            ? 'bg-void-800 text-cyber-cyan font-semibold border-l-2 border-cyber-cyan'
-            : 'text-slate-300 hover:bg-void-800 hover:text-white'
-        ]}
-      >
-        {link.name}
-      </a>
-    ))}
-    <a
-      href="https://github.com/agogpixel"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="block rounded-md px-3 py-2 text-slate-400 hover:text-cyber-cyan hover:bg-void-800 transition-colors"
-    >
-      GitHub Org ↗
-    </a>
-  </div>
 </header>
-
-<script>
-  const toggleBtn = document.getElementById('mobile-menu-toggle');
-  const menu = document.getElementById('mobile-menu');
-  const hamburger = document.getElementById('hamburger-icon');
-  const closeIcon = document.getElementById('close-icon');
-
-  toggleBtn?.addEventListener('click', () => {
-    const isExpanded = !menu?.classList.contains('hidden');
-    if (isExpanded) {
-      menu?.classList.add('hidden');
-      hamburger?.classList.remove('hidden');
-      closeIcon?.classList.add('hidden');
-    } else {
-      menu?.classList.remove('hidden');
-      hamburger?.classList.add('hidden');
-      closeIcon?.classList.remove('hidden');
-    }
-  });
-</script>
