@@ -1,34 +1,29 @@
-﻿## Summary of Changes
-<!-- Provide a clear, concise overview of what this PR accomplishes. -->
-
+## Summary
+<!-- Provide a clear, concise overview of what this PR accomplishes and why. -->
 Closes #<!-- issue number -->
 
-## Type of Change
-- [ ] \eat\: A new feature or gameplay mechanic
-- [ ] \ix\: A bug fix
-- [ ] \docs\: Documentation, GDD, or branding update
-- [ ] \rt\ / \udio\: Visual assets, SFX, or music integration
-- [ ] \efactor\: Code restructuring without behavioral change
-- [ ] \chore\: Tooling, CI/CD, or dependency maintenance
+## Key Changes
+- <!-- Bulleted list of key files, scenes, or systems changed -->
 
-## Testing & Verification
-<!-- Describe how these changes were verified. Include screenshots or terminal logs where appropriate. -->
-- [ ] Automated tests run & passed (\	est_run\ / GUT / Vitest / etc.)
-- [ ] Visual or runtime verification completed
-- [ ] Zero engine/compiler warnings or unhandled exceptions
+## Verification & Proof
+<!-- Concrete evidence that changes function cleanly without regression. -->
+- [ ] Automated tests run & passed (`test_run` / GUT / Vitest / etc.)
+- [ ] Visual or runtime verification completed (screenshots / logs)
+- [ ] Zero engine errors, compiler warnings, or unhandled exceptions
 
 ## 🧠 Knowledge & Rules Captured (Antigravity DoD)
 *Every subagent is expected to leave the repository smarter than they found it.*
-- [ ] **Engine / Framework Quirks Discovered**: Documented in \.agents/rules/\
-- [ ] **Multi-Step Procedure Created**: Added as a skill in \.agents/skills/\
-- [ ] **Architecture Decision / Post-Mortem**: Documented in \docs/learnings/\
+- [ ] **Engine / Framework Quirks Discovered**: Documented in `.agents/rules/`
+- [ ] **Multi-Step Procedure Created**: Added as a skill in `.agents/skills/`
+- [ ] **Architecture Decision / Post-Mortem**: Documented in `docs/learnings/`
 - [ ] **No New Knowledge Captured (N/A)**: (Explain why below)
 
 > **Captured Rule/Doc References**:
-> - *(e.g., \.agents/rules/agm_standards.md\ updated with collision mask gotcha)*
+> - *(e.g., `.agents/rules/astro_standards.md` updated with routing quirks)*
 
 ---
-### Checklist
-- [ ] Follows studio branch naming convention (\eat/<track>-<issue#>-<slug>\)
+### Reviewer Checklist
+- [ ] Follows studio branch naming convention (`<type>/<track_slug>-<issue#>-<slug>`)
 - [ ] Follows Conventional Commits
-- [ ] Updated master tracker status (\In Progress\ -> \Done\ upon merge)
+- [ ] Knowledge reflection completed
+- [ ] Ready for **Squash and Merge**
