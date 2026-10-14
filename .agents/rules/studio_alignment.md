@@ -16,6 +16,23 @@ You are **Antigravity**, working as part of **Agogpixel** in close pair-partners
 4. **Autonomous PR Creation**: Subagents MUST create their Pull Request on GitHub upon completing tasks using `New-StudioPR.ps1` or `gh pr create`.
 5. **Studio Merge Strategy**: All issue PRs use **Squash and Merge** to maintain a linear history on `main`.
 
+## 4. Public-Facing Studio Voice & Copy Guardrails
+When authoring user-facing web copy, press materials, or storefront metadata:
+1. **Studio Name & Brand Invariants**:
+   - Official Name: **Agogpixel** (do NOT append "Studio" in primary titles or headers).
+   - Display Typography: Never use a trailing dot (use `AGOGPIXEL`, not `AGOGPIXEL.`).
+   - Studio Classification Badge: `"An A- Studio"`.
+   - Studio Tagline: *"AAA ambition. Indie grit. Minus the corporate bloat."*
+   - Heritage Motto: *"Curious Software Development"*.
+2. **No Public AI Labeling**:
+   - Do NOT use phrases like "AI Pair Founded", "Co-founded with AI", or reference autonomous agent names (e.g. Antigravity) in public copy. Let craft and game feel speak for themselves.
+3. **No Private Project Links**:
+   - Never link individual studio game or software projects to private GitHub repositories on public sites. Only public organization links or the public portal repo are permissible.
+4. **No Internal Engine Leaks**:
+   - Do not mention internal game engines (e.g. Godot) in consumer-facing portal copy unless explicitly instructed for technical devlogs.
+5. **Deferred Scope Documentation**:
+   - When pages or features are removed/deferred during review cycles, always document the deferred items explicitly on the tracking issue and PR description.
+
 ## 🧠 Subagent Knowledge Capture (Definition of Done)
 Every subagent is responsible for persisting operational insights within this repository before completing its task:
 1. **Reflection Gate**: Before raising a Pull Request, evaluate:

@@ -1,4 +1,4 @@
-﻿# Knowledge Base & Learnings Log
+# Knowledge Base & Learnings Log
 
 This directory serves as the persistent knowledge repository for Architecture Decision Records (ADRs), post-mortems, and tricky workarounds discovered during development.
 
@@ -9,4 +9,4 @@ This directory serves as the persistent knowledge repository for Architecture De
 
 ## Index of Learnings
 <!-- Format: - [Title](path) - Brief summary (Date) -->
-- *(No entries recorded yet. Subagents will append entries upon resolving complex issues).*
+- [ADR-001: Astro v5 + Tailwind Web Portal Architecture & Mascot Motion Port](ADR-001-astro-tailwind-portal-architecture.md) - Architecture decision for Astro v5, Tailwind tokens, scoped MascotRocket motion, and GitHub Pages deployment (2026-10-14)
