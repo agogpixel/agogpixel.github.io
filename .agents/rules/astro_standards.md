@@ -17,6 +17,7 @@ All web styles and Tailwind tokens must conform strictly to the studio brand spe
 - **Porthole Cyan**: `#4CC9F0` (Glows, accents, active marks)
 - **Rocket Scarlet**: `#E63946` (Alerts, combat highlights, badges)
 - **Starlight White**: `#EEEEEE` (Body typography, primary headings)
+- **Neutral Ramp & Perceptual Accessibility Reference**: Avoid arbitrary blue-tinted Tailwind `slate-*` grays and generic AI-template tropes (radial blur blobs, pulsing status pills). See [`docs/design/portal_visual_identity_and_color_science_audit.md`](../../docs/design/portal_visual_identity_and_color_science_audit.md) for the `kidthales.com` minimalist landmark patterns, **Lunar Grey** (`#A6A6A6`) / **Hull Charcoal** (`#4E4E4E`) neutral ramp, and Paul Tol deuteranopia/luminance calibration options (`#C97320` vs `#E63946` $\Delta L^* = 4.8$ collision analysis).
 
 ## Viewport & Layout Scrolling Standards
 - **Single-Viewport Fit (Landing Hero)**: For hero/jumbotron landing pages (`src/pages/index.astro`), the full layout (Header + Hero + Footer) must fit within `100vh` / `100dvh` without vertical scrolling on desktop (`scrollable={false}` default on `Layout.astro`, which applies `h-screen min-h-[100dvh]` with `md:overflow-y-hidden`).
