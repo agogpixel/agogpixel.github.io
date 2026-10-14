@@ -83,14 +83,6 @@ agogpixel.github.io/
 
 ---
 
-## 📜 Studio Philosophy: The "A-" Standard
-
-1. **Minus the Corporate Bloat**: No endless steering committees or 60-page design docs. We iterate, build, and ship.
-2. **Player-First Purity**: No predatory microtransactions, battle passes, or engagement traps. Pure arcade mechanics.
-3. **Relentless Craft & Velocity**: High technical rigor, lightweight architecture, and pride in shipping real software.
-
----
-
 ## 📄 License & Copyright
 
 &copy; 2026 Agogpixel. All rights reserved.
