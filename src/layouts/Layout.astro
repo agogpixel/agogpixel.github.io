@@ -7,12 +7,14 @@ export interface Props {
   title?: string;
   description?: string;
   image?: string;
+  scrollable?: boolean;
 }
 
 const {
   title = 'Agogpixel | Curious Software Development',
   description = 'An A- Studio. Curious Software Development.',
   image = '/assets/rocket_guinea_pig.png',
+  scrollable = false,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://agogpixel.com');
@@ -26,6 +28,12 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://agogpixe
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Agogpixel Devlogs RSS Feed"
+      href={new URL('rss.xml', Astro.site || 'https://agogpixel.com')}
+    />
 
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -50,9 +58,21 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://agogpixe
       rel="stylesheet"
     />
   </head>
-  <body class="h-screen min-h-[100dvh] flex flex-col justify-between bg-cosmos-950 text-slate-200 overflow-x-hidden overflow-y-auto md:overflow-y-hidden">
+  <body
+    class:list={[
+      'flex flex-col justify-between bg-cosmos-950 text-slate-200 overflow-x-hidden',
+      scrollable
+        ? 'min-h-screen min-h-[100dvh] overflow-y-auto'
+        : 'h-screen min-h-[100dvh] overflow-y-auto md:overflow-y-hidden',
+    ]}
+  >
     <Header />
-    <main class="flex-1 flex flex-col items-center justify-center min-h-0">
+    <main
+      class:list={[
+        'flex-1 flex flex-col items-center',
+        scrollable ? 'w-full justify-start' : 'justify-center min-h-0',
+      ]}
+    >
       <slot />
     </main>
     <Footer />
