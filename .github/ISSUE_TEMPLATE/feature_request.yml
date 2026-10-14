@@ -1,0 +1,52 @@
+name: 🌐 Web Portal & Devlog Feature
+description: Propose a landing page component, devlog feature, or CI/CD workflow for agogpixel.com
+title: "feat(<area>): <brief description>"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for opening an issue for **agogpixel.github.io** (`agogpixel.com`)!
+        Issues created here automatically sync into the **Agogpixel Studio Master Tracker**.
+  - type: textarea
+    id: overview
+    attributes:
+      label: Feature Overview
+      description: What portal feature, devlog article, or branding component are we implementing?
+      placeholder: Describe the Astro component, Tailwind layout, or MDX article...
+    validations:
+      required: true
+  - type: dropdown
+    id: workstream
+    attributes:
+      label: Workstream
+      options:
+        - Web/CI-CD
+        - Marketing/Biz
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 (Blocker)
+        - P1 (Critical)
+        - P2 (Important)
+        - P3 (Nice-to-have)
+    validations:
+      required: true
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimated Days
+      description: Integer estimate in days (optional)
+      placeholder: "1"
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria & Build Verification
+      description: What automated check confirms this feature works?
+      placeholder: "- npm run build executes with 0 errors\n- Astro devlog collection parses frontmatter successfully"
+    validations:
+      required: false
