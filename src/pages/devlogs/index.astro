@@ -1,96 +1,67 @@
 ---
-import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-
-const devlogs = await getCollection('devlog');
-const sortedDevlogs = devlogs.sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
 ---
 
 <Layout
   title="Devlogs | Agogpixel Studio"
-  description="Follow Agogpixel Studio's public engineering logs, game mechanics deep-dives, and AI-accelerated studio development."
+  description="Follow Agogpixel Studio's engineering devlogs, mechanics breakdowns, and notes on building an independent studio in public."
 >
-  <div class="py-16 md:py-24">
-    <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+  <div class="py-16 md:py-28">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <!-- Section Header -->
       <div class="mb-16 text-center max-w-3xl mx-auto">
-        <div class="inline-flex items-center gap-2 rounded-full border border-cyber-cyan/30 bg-void-900/80 px-4 py-1.5 font-mono text-xs text-cyber-cyan mb-4">
-          <span>Public Engineering Hub</span>
+        <div class="inline-flex items-center gap-2 rounded-full border border-brand-cyan/30 bg-cosmos-900/90 px-4 py-1.5 font-mono text-xs text-brand-cyan mb-4">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-cyan animate-pulse"></span>
+          <span>Engineering Hub</span>
         </div>
         <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl font-sans">
           Building an "A-" Studio in Public
         </h1>
-        <p class="mt-4 text-slate-300 text-base sm:text-lg">
-          Raw notes, architectural decisions, and post-mortems from our indie game production and AI pair-programming experiments.
+        <p class="mt-4 text-slate-300 text-base sm:text-lg font-sans">
+          Transparent engineering logs, arcade mechanics deep dives, and production retrospectives.
         </p>
       </div>
 
-      <!-- Devlog Track Spotlight -->
-      <div class="mb-12 rounded-xl border border-cyber-cyan/30 bg-void-900/60 p-6 md:p-8">
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <span class="font-mono text-xs uppercase tracking-widest text-cyber-cyan font-bold">Featured Track</span>
-            <h2 class="text-xl font-bold text-white mt-1">Autonomous Subagent Development & Godot 4.4</h2>
-            <p class="text-sm text-slate-400 mt-2 max-w-2xl">
-              Documenting how we build production-ready Godot games and web portals using specialized AI subagents with strict git workflows.
-            </p>
+      <!-- Tasteful Coming Soon State -->
+      <div class="rounded-2xl border border-cosmos-800 bg-cosmos-900/60 p-8 md:p-12 shadow-xl backdrop-blur-sm text-center">
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-brand-amber/30 bg-cosmos-950 mb-6 shadow-lg shadow-brand-amber/10">
+          <img src="/assets/rocket_guinea_pig.png" alt="Agogpixel Mascot" class="h-10 w-10 object-contain" />
+        </div>
+
+        <div class="inline-flex items-center gap-2 rounded-full border border-brand-amber/30 bg-brand-amber/10 px-3.5 py-1 font-mono text-xs text-brand-amber mb-4">
+          <span>Inaugural Entries In Preparation</span>
+        </div>
+
+        <h2 class="text-2xl font-bold text-white sm:text-3xl font-sans">
+          Devlogs Launching Soon
+        </h2>
+
+        <p class="mx-auto mt-4 max-w-xl text-sm sm:text-base leading-relaxed text-slate-300 font-sans">
+          We're preparing comprehensive breakdowns of our game feel experiments, retro rendering pipelines, and lean production workflows. Check back as our active development sprints hit milestone releases.
+        </p>
+
+        <!-- Preview Topics Grid -->
+        <div class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs text-left">
+          <div class="rounded-xl border border-cosmos-800 bg-cosmos-950 p-4">
+            <span class="text-brand-cyan font-bold block mb-1">Arcade Game Feel</span>
+            <span class="text-slate-400">Tuning inertial drift curves, screenshake, and instant control feedback.</span>
           </div>
-          <div class="font-mono text-xs text-slate-500">
-            {sortedDevlogs.length} Published Entry
+          <div class="rounded-xl border border-cosmos-800 bg-cosmos-950 p-4">
+            <span class="text-brand-amber font-bold block mb-1">Retro Physics Loops</span>
+            <span class="text-slate-400">Fixed-rate physics simulation, collision fidelity, and sub-pixel snapping.</span>
+          </div>
+          <div class="rounded-xl border border-cosmos-800 bg-cosmos-950 p-4">
+            <span class="text-brand-scarlet font-bold block mb-1">The "A-" Standard</span>
+            <span class="text-slate-400">Shipping velocity, avoiding feature bloat, and automated CI/CD pipelines.</span>
           </div>
         </div>
-      </div>
 
-      <!-- Devlog List -->
-      <div class="space-y-6">
-        {sortedDevlogs.map((entry) => (
-          <article class="group rounded-xl border border-void-800 bg-void-900/40 p-6 hover:border-cyber-cyan/40 hover:bg-void-900/80 transition-all duration-200">
-            <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-500 mb-3">
-              <div class="flex items-center gap-2">
-                <span class="rounded bg-void-800 px-2.5 py-0.5 text-cyber-cyan font-semibold">
-                  {entry.data.track}
-                </span>
-                <span>•</span>
-                <span>{entry.data.author}</span>
-              </div>
-              <time datetime={entry.data.pubDate.toISOString()}>
-                {entry.data.pubDate.toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </time>
-            </div>
-
-            <h3 class="text-xl font-bold text-white group-hover:text-cyber-cyan transition-colors">
-              <a href={`/devlogs/${entry.slug}/`}>
-                {entry.data.title}
-              </a>
-            </h3>
-
-            <p class="mt-2 text-sm text-slate-300 leading-relaxed">
-              {entry.data.summary}
-            </p>
-
-            <div class="mt-4 flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-void-800/60">
-              <div class="flex flex-wrap gap-1.5 font-mono text-[11px]">
-                {entry.data.tags.map((tag) => (
-                  <span class="rounded bg-void-950 border border-void-800 px-2 py-0.5 text-slate-400">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-              <a
-                href={`/devlogs/${entry.slug}/`}
-                class="inline-flex items-center gap-1 font-mono text-xs font-semibold text-cyber-cyan hover:underline"
-              >
-                <span>Read Full Devlog</span>
-                <span class="group-hover:translate-x-1 transition-transform">→</span>
-              </a>
-            </div>
-          </article>
-        ))}
+        <div class="mt-10 border-t border-cosmos-800 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-slate-500 gap-4">
+          <span>Track: Building an A- Studio in Public</span>
+          <a href="https://github.com/agogpixel" target="_blank" rel="noopener noreferrer" class="text-brand-cyan hover:underline">
+            Follow Studio on GitHub ↗
+          </a>
+        </div>
       </div>
     </div>
   </div>

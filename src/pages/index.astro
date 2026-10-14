@@ -4,15 +4,15 @@ import MascotRocket from '../components/MascotRocket.astro';
 ---
 
 <Layout
-  title="Agogpixel Studio | Curious Software & Indie Game Development"
-  description="Independent game development studio crafting retro sci-fi arcade experiences, modern game feel, and AI-accelerated lean engineering."
+  title="Agogpixel Studio | Curious Software & Indie Games"
+  description="Independent game studio crafting retro sci-fi arcade action, tight mechanics, and curious software."
 >
   <!-- Hero Section -->
   <section class="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-32">
     <!-- Background Ambient Glow -->
     <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-      <div class="h-96 w-96 rounded-full bg-cyber-cyan/10 blur-3xl filter"></div>
-      <div class="h-80 w-80 rounded-full bg-cyber-flame/10 blur-3xl filter -translate-x-20 translate-y-20"></div>
+      <div class="h-96 w-96 rounded-full bg-brand-cyan/10 blur-3xl filter"></div>
+      <div class="h-80 w-80 rounded-full bg-brand-amber/10 blur-3xl filter -translate-x-20 translate-y-20"></div>
     </div>
 
     <div class="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
@@ -21,111 +21,111 @@ import MascotRocket from '../components/MascotRocket.astro';
         <MascotRocket size="lg" animated={true} />
       </div>
 
-      <!-- Studio Tagline & Headline -->
-      <div class="inline-flex items-center gap-2 rounded-full border border-cyber-cyan/30 bg-void-900/80 px-4 py-1.5 font-mono text-xs text-cyber-cyan mb-6 shadow-sm shadow-cyber-cyan/10">
-        <span class="inline-block h-2 w-2 rounded-full bg-cyber-cyan animate-pulse"></span>
-        <span>Independent Game Studio • Pair Founded with AI</span>
+      <!-- Studio Tagline Badge -->
+      <div class="inline-flex items-center gap-2 rounded-full border border-brand-cyan/30 bg-cosmos-900/90 px-4 py-1.5 font-mono text-xs text-brand-cyan mb-6 shadow-sm shadow-brand-cyan/10">
+        <span class="inline-block h-2 w-2 rounded-full bg-brand-cyan animate-pulse"></span>
+        <span>AAA Ambition. Indie Grit. Minus the Corporate Bloat.</span>
       </div>
 
-      <h1 class="text-4xl font-extrabold tracking-tight sm:text-6xl text-slate-100 font-sans">
+      <h1 class="text-4xl font-extrabold tracking-tight sm:text-6xl text-brand-starlight font-sans">
         Curious Software <br class="hidden sm:inline" />
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-white to-cyber-flame">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan via-brand-starlight to-brand-amber">
           & Indie Games
         </span>
       </h1>
 
       <p class="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-slate-300 leading-relaxed font-sans">
-        Agogpixel crafts retro sci-fi arcade action with pixel-perfect game feel, powered by lean autonomous engineering and building in public.
+        Agogpixel crafts retro sci-fi arcade action with pixel-perfect game feel, tight mechanics, and a relentless focus on pure, unfiltered gameplay.
       </p>
 
       <!-- CTAs -->
       <div class="mt-8 flex flex-wrap items-center justify-center gap-4 font-mono text-sm">
         <a
           href="/games/"
-          class="inline-flex items-center gap-2 rounded-lg bg-cyber-cyan px-6 py-3 font-semibold text-void-950 shadow-lg shadow-cyber-cyan/20 hover:bg-cyber-neon hover:shadow-cyber-cyan/30 transition-all duration-200 hover:-translate-y-0.5"
+          class="inline-flex items-center gap-2 rounded-lg bg-brand-amber px-6 py-3 font-semibold text-cosmos-950 shadow-lg shadow-brand-amber/20 hover:brightness-110 transition-all duration-200 hover:-translate-y-0.5"
         >
           <span>Explore Games</span>
           <span>→</span>
         </a>
         <a
-          href="/devlogs/"
-          class="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-void-900/80 px-6 py-3 font-medium text-slate-200 hover:border-cyber-cyan/40 hover:text-cyber-cyan hover:bg-void-800 transition-all duration-200"
-        >
-          <span>Read Devlogs</span>
-        </a>
-        <a
           href="/about/"
-          class="inline-flex items-center gap-2 rounded-lg border border-void-800 bg-transparent px-5 py-3 font-medium text-slate-400 hover:text-slate-200 transition-colors"
+          class="inline-flex items-center gap-2 rounded-lg border border-cosmos-700 bg-cosmos-900/80 px-6 py-3 font-medium text-slate-200 hover:border-brand-cyan/40 hover:text-brand-cyan hover:bg-cosmos-800 transition-all duration-200"
         >
           <span>The "A-" Manifesto</span>
+        </a>
+        <a
+          href="/devlogs/"
+          class="inline-flex items-center gap-2 rounded-lg border border-cosmos-800 bg-transparent px-5 py-3 font-medium text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          <span>Devlogs</span>
         </a>
       </div>
     </div>
   </section>
 
-  <!-- Flagship Game Spotlight -->
-  <section class="border-t border-void-800/80 bg-void-900/40 py-20">
+  <!-- Flagship Game Spotlight (Tasteful Teaser) -->
+  <section class="border-t border-cosmos-800 bg-cosmos-900/40 py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <span class="font-mono text-xs uppercase tracking-widest text-cyber-flame font-semibold">Flagship Project</span>
+          <span class="font-mono text-xs uppercase tracking-widest text-brand-amber font-semibold">In Development</span>
           <h2 class="mt-2 text-3xl font-bold tracking-tight text-white font-sans sm:text-4xl">
             Escape from Cygnus X-1
           </h2>
         </div>
-        <a href="/games/" class="font-mono text-sm text-cyber-cyan hover:underline flex items-center gap-1">
-          View All Projects <span>→</span>
+        <a href="/games/" class="font-mono text-sm text-brand-cyan hover:underline flex items-center gap-1">
+          Games Hub <span>→</span>
         </a>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl border border-void-800 bg-void-900/80 p-6 md:p-10 shadow-xl shadow-void-950/50 backdrop-blur-sm">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl border border-cosmos-800 bg-cosmos-900/80 p-6 md:p-10 shadow-xl shadow-cosmos-950/50 backdrop-blur-sm">
         <!-- Visual Preview Card -->
-        <div class="lg:col-span-6 relative aspect-video rounded-xl overflow-hidden border border-void-700/60 bg-void-950 flex flex-col items-center justify-center p-6 text-center">
-          <div class="absolute inset-0 bg-gradient-to-tr from-cyber-cyan/10 via-transparent to-cyber-flame/15 pointer-events-none"></div>
+        <div class="lg:col-span-6 relative aspect-video rounded-xl overflow-hidden border border-cosmos-700 bg-cosmos-950 flex flex-col items-center justify-center p-6 text-center">
+          <div class="absolute inset-0 bg-gradient-to-tr from-brand-cyan/10 via-transparent to-brand-amber/15 pointer-events-none"></div>
           <div class="relative z-10 flex flex-col items-center">
-            <div class="mb-4 rounded-xl border border-cyber-cyan/20 bg-void-900/90 p-4 shadow-lg shadow-cyber-cyan/10">
+            <div class="mb-4 rounded-xl border border-brand-cyan/20 bg-cosmos-900/90 p-4 shadow-lg shadow-brand-cyan/10">
               <img src="/assets/rocket_guinea_pig.png" alt="Cygnus Ship" class="h-16 w-16 object-contain" />
             </div>
-            <div class="font-mono text-xs uppercase tracking-wider text-slate-400">Target Resolution</div>
-            <div class="font-mono text-lg font-bold text-cyber-cyan">360 × 720 Native Pixel-Snap</div>
-            <p class="mt-2 text-xs text-slate-500 max-w-xs font-mono">
-              Godot 4.4 • Retro GPUParticles2D • Dynamic Thruster Physics
+            <div class="font-mono text-xs uppercase tracking-wider text-slate-400">Target Aesthetics</div>
+            <div class="font-mono text-lg font-bold text-brand-cyan">Retro Sci-Fi Arcade Action</div>
+            <p class="mt-2 text-xs text-slate-400 max-w-xs font-mono">
+              Inertial Drifts • Hazardous Accretion Disks • Tight Vector Physics
             </p>
           </div>
         </div>
 
         <!-- Description & Feature Pillars -->
         <div class="lg:col-span-6 space-y-6">
-          <div class="inline-flex items-center gap-2 rounded-full border border-cyber-flame/30 bg-cyber-flame/10 px-3 py-1 font-mono text-xs text-cyber-flame">
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-cyber-flame"></span>
-            In Active Sprint
+          <div class="inline-flex items-center gap-2 rounded-full border border-brand-amber/30 bg-brand-amber/10 px-3 py-1 font-mono text-xs text-brand-amber">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-brand-amber animate-pulse"></span>
+            Coming Soon • In Active Production
           </div>
 
-          <h3 class="text-xl font-bold text-white sm:text-2xl">
-            Survive the Gravitational Collapse of Cygnus X-1
+          <h3 class="text-xl font-bold text-white sm:text-2xl font-sans">
+            Escape the Gravitational Pull of an Event Horizon
           </h3>
 
           <p class="text-sm leading-relaxed text-slate-300">
-            A high-octane 2D retro sci-fi arcade survival title. Maneuver a nimble guinea pig spacecraft around the inescapable pull of a black hole accretion disk, evading asteroid swarms and orbital anomalies.
+            A high-octane 2D retro sci-fi arcade survival experience. Navigate dangerous orbital debris swarms and cosmic anomalies around an insatiable black hole accretion disk with responsive thruster controls.
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
-            <div class="rounded-lg border border-void-800 bg-void-950/60 p-3">
-              <span class="font-bold text-cyber-cyan block mb-1">Crisp Pixel Physics</span>
-              <span class="text-slate-400">Nearest-neighbor filtering with strict integer sub-pixel rendering.</span>
+            <div class="rounded-lg border border-cosmos-800 bg-cosmos-950/80 p-3">
+              <span class="font-bold text-brand-cyan block mb-1">Authentic Arcade Feel</span>
+              <span class="text-slate-400">Tight, responsive controls with crisp collision detection and zero lag.</span>
             </div>
-            <div class="rounded-lg border border-void-800 bg-void-950/60 p-3">
-              <span class="font-bold text-cyber-flame block mb-1">Inertial Thrusters</span>
-              <span class="text-slate-400">Cosine tilt physics and staggered thrust exhaust mechanics.</span>
+            <div class="rounded-lg border border-cosmos-800 bg-cosmos-950/80 p-3">
+              <span class="font-bold text-brand-amber block mb-1">Inertial Vector Thrusters</span>
+              <span class="text-slate-400">Momentum-based propulsion mechanics that reward precision maneuvers.</span>
             </div>
           </div>
 
           <div class="pt-2">
             <a
               href="/games/"
-              class="inline-flex items-center gap-2 font-mono text-sm font-semibold text-cyber-cyan hover:text-white transition-colors"
+              class="inline-flex items-center gap-2 font-mono text-sm font-semibold text-brand-cyan hover:text-white transition-colors"
             >
-              <span>Explore Cygnus X-1 details</span>
+              <span>Learn more on the games showcase</span>
               <span>→</span>
             </a>
           </div>
@@ -134,121 +134,54 @@ import MascotRocket from '../components/MascotRocket.astro';
     </div>
   </section>
 
-  <!-- Devlogs Teaser Section -->
-  <section class="border-t border-void-800/80 py-20">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <span class="font-mono text-xs uppercase tracking-widest text-cyber-cyan font-semibold">Devlog Hub</span>
-          <h2 class="mt-2 text-3xl font-bold tracking-tight text-white font-sans sm:text-4xl">
-            Building an "A-" Studio in Public
-          </h2>
-          <p class="mt-2 max-w-2xl text-sm text-slate-400">
-            Engineering logs, game mechanics breakdowns, and insights into human + AI pair game development.
-          </p>
-        </div>
-        <a href="/devlogs/" class="font-mono text-sm text-cyber-cyan hover:underline flex items-center gap-1">
-          All Devlogs <span>→</span>
-        </a>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Devlog Teaser Card 1 -->
-        <article class="group rounded-xl border border-void-800 bg-void-900/60 p-6 hover:border-cyber-cyan/40 hover:bg-void-900 transition-all duration-200">
-          <div class="flex items-center justify-between text-xs font-mono text-slate-500 mb-3">
-            <span class="text-cyber-cyan">#01 • Architecture</span>
-            <time>October 2026</time>
-          </div>
-          <h3 class="text-lg font-bold text-white group-hover:text-cyber-cyan transition-colors">
-            Scaffolding the Agogpixel Static Web Portal
-          </h3>
-          <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-            How we ported legacy cosine-tilt animations to modern Astro v5, built dark cyberpunk tokens with Tailwind, and established automated GitHub Pages deployment.
-          </p>
-          <div class="mt-4 flex items-center gap-2 font-mono text-xs text-cyber-cyan">
-            <span>Read Entry</span>
-            <span class="group-hover:translate-x-1 transition-transform">→</span>
-          </div>
-        </article>
-
-        <!-- Devlog Teaser Card 2 -->
-        <article class="group rounded-xl border border-void-800 bg-void-900/60 p-6 hover:border-cyber-cyan/40 hover:bg-void-900 transition-all duration-200">
-          <div class="flex items-center justify-between text-xs font-mono text-slate-500 mb-3">
-            <span class="text-cyber-flame">#02 • Mechanics</span>
-            <time>Upcoming</time>
-          </div>
-          <h3 class="text-lg font-bold text-white group-hover:text-cyber-flame transition-colors">
-            Pixel Snap & Inertial Drifts in Godot 4.4
-          </h3>
-          <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-            Overcoming sub-pixel jitter in 2D Godot retro games and tuning responsive inertial drift curves for arcade space survival.
-          </p>
-          <div class="mt-4 flex items-center gap-2 font-mono text-xs text-cyber-flame">
-            <span>Preview Notes</span>
-            <span class="group-hover:translate-x-1 transition-transform">→</span>
-          </div>
-        </article>
-
-        <!-- Devlog Teaser Card 3 -->
-        <article class="group rounded-xl border border-void-800 bg-void-900/60 p-6 hover:border-cyber-cyan/40 hover:bg-void-900 transition-all duration-200">
-          <div class="flex items-center justify-between text-xs font-mono text-slate-500 mb-3">
-            <span class="text-cyber-purple">#03 • Methodology</span>
-            <time>Upcoming</time>
-          </div>
-          <h3 class="text-lg font-bold text-white group-hover:text-cyber-purple transition-colors">
-            The "A-" Manifesto: Velocity Over Perfection
-          </h3>
-          <p class="mt-2 text-sm text-slate-400 leading-relaxed">
-            Why studio agility, automated workflows, and small iterative releases beat heavy multi-year roadmaps.
-          </p>
-          <div class="mt-4 flex items-center gap-2 font-mono text-xs text-cyber-purple">
-            <span>Read Manifesto</span>
-            <span class="group-hover:translate-x-1 transition-transform">→</span>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- Studio Pillars -->
-  <section class="border-t border-void-800/80 bg-void-900/30 py-20">
+  <!-- Studio Tenets Section (3 Sardonic A- Tenets) -->
+  <section class="border-t border-cosmos-800 bg-cosmos-900/30 py-20">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-2xl mx-auto mb-16">
-        <span class="font-mono text-xs uppercase tracking-widest text-cyber-cyan font-semibold">Studio Tenets</span>
+        <span class="font-mono text-xs uppercase tracking-widest text-brand-cyan font-semibold">The A- Standard</span>
         <h2 class="mt-2 text-3xl font-bold tracking-tight text-white font-sans sm:text-4xl">
-          Engineered for Velocity & Play
+          Why "A-" Beats AAA
         </h2>
+        <p class="mt-3 text-sm text-slate-400 font-sans">
+          AAA has $150M budgets, 500-person credits rolls, and committee meetings about committee meetings. We prefer making games.
+        </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="rounded-xl border border-void-800 bg-void-900/60 p-6">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-cyber-cyan/30 bg-void-800 text-cyber-cyan font-mono text-xl font-bold mb-4">
-            01
+        <div class="rounded-xl border border-cosmos-800 bg-cosmos-900/70 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-brand-amber/30 bg-cosmos-950 text-brand-amber font-mono text-xl font-bold mb-4">
+              01
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2 font-sans">Minus the Corporate Bloat</h3>
+            <p class="text-sm text-slate-300 leading-relaxed font-sans">
+              No endless steering committees, no 60-page design docs that nobody reads, and no corporate paralysis. We build, test, refine, and ship.
+            </p>
           </div>
-          <h3 class="text-lg font-bold text-white mb-2">The "A-" Standard</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            Relentless momentum without bureaucratic drag. High technical rigor, lightweight architecture, and shipping functional games frequently.
-          </p>
         </div>
 
-        <div class="rounded-xl border border-void-800 bg-void-900/60 p-6">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-cyber-flame/30 bg-void-800 text-cyber-flame font-mono text-xl font-bold mb-4">
-            02
+        <div class="rounded-xl border border-cosmos-800 bg-cosmos-900/70 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-brand-cyan/30 bg-cosmos-950 text-brand-cyan font-mono text-xl font-bold mb-4">
+              02
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2 font-sans">Player-First Purity</h3>
+            <p class="text-sm text-slate-300 leading-relaxed font-sans">
+              No predatory microtransactions, no battle passes, and no manipulative engagement traps designed by corporate spreadsheets. Just honest, responsive arcade gameplay.
+            </p>
           </div>
-          <h3 class="text-lg font-bold text-white mb-2">Human + AI Pair Founding</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            Founded by kidthales & Antigravity. Creative game direction and architectural integrity paired with autonomous, test-driven coding agents.
-          </p>
         </div>
 
-        <div class="rounded-xl border border-void-800 bg-void-900/60 p-6">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-cyber-purple/30 bg-void-800 text-cyber-purple font-mono text-xl font-bold mb-4">
-            03
+        <div class="rounded-xl border border-cosmos-800 bg-cosmos-900/70 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg border border-brand-scarlet/30 bg-cosmos-950 text-brand-scarlet font-mono text-xl font-bold mb-4">
+              03
+            </div>
+            <h3 class="text-lg font-bold text-white mb-2 font-sans">Relentless Craft & Velocity</h3>
+            <p class="text-sm text-slate-300 leading-relaxed font-sans">
+              We don't hide behind multi-year roadmap promises that never arrive. High technical rigor, lightweight architecture, and pride in shipping real software into players' hands.
+            </p>
           </div>
-          <h3 class="text-lg font-bold text-white mb-2">Open Public Build</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            Every git commit, PR, devlog, and architectural decision is transparently published. We build in the open to share learnings with fellow indies.
-          </p>
         </div>
       </div>
     </div>

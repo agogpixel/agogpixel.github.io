@@ -5,18 +5,33 @@ export default {
   theme: {
     extend: {
       colors: {
+        cosmos: {
+          950: '#030303', // Deep Cosmos Black (master canvas)
+          900: '#0a0a0a',
+          800: '#141414',
+          700: '#1f1f1f',
+          600: '#2b2b2b',
+        },
+        brand: {
+          amber: '#C97320',    // Thruster Amber
+          scarlet: '#E63946',  // Rocket Scarlet
+          cyan: '#4CC9F0',     // Porthole Cyan
+          starlight: '#EEEEEE',// Starlight White
+        },
+        // Compatibility tokens mapped to brand guide
         void: {
-          950: '#030308',
-          900: '#070913',
-          800: '#0e1220',
-          700: '#171d30',
-          600: '#232b45',
+          950: '#030303',
+          900: '#0a0a0a',
+          800: '#141414',
+          700: '#1f1f1f',
+          600: '#2b2b2b',
         },
         cyber: {
-          cyan: '#00f0ff',
-          neon: '#00e5ff',
-          flame: '#c97320',
-          amber: '#f59e0b',
+          cyan: '#4CC9F0',     // Porthole Cyan (brand spec)
+          neon: '#4CC9F0',
+          flame: '#C97320',    // Thruster Amber (brand spec)
+          amber: '#C97320',
+          scarlet: '#E63946',  // Rocket Scarlet (brand spec)
           purple: '#a855f7',
         },
       },

@@ -1,20 +1,27 @@
 # Agogpixel Studio Web Portal
 
 [![Deploy to GitHub Pages](https://github.com/agogpixel/agogpixel.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/agogpixel/agogpixel.github.io/actions/workflows/deploy.yml)
-[![Live Site](https://img.shields.io/badge/live-agogpixel.com-00f0ff.svg)](https://agogpixel.com)
+[![Live Site](https://img.shields.io/badge/live-agogpixel.com-4CC9F0.svg)](https://agogpixel.com)
 [![Engine](https://img.shields.io/badge/Astro-v5-bc52ee.svg)](https://astro.build)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-v3-38bdf8.svg)](https://tailwindcss.com)
 
-The official web portal and devlog hub for **Agogpixel Studio** ([agogpixel.com](https://agogpixel.com)), an independent indie game studio pair-founded by human creative director **kidthales** and autonomous AI engineering agent **Antigravity**.
+The official web portal and devlog hub for **Agogpixel Studio** ([agogpixel.com](https://agogpixel.com)), an independent game studio crafting retro sci-fi arcade action, tight mechanics, and curious software.
+
+> *"AAA ambition. Indie grit. Minus the corporate bloat."*
 
 ---
 
 ## ⚡ Tech Stack & Features
 
 - **Static Framework**: [Astro v5](https://astro.build) configured for pure static generation (`output: "static"`), delivering near-instant loading with zero unnecessary client JavaScript.
-- **Styling**: [Tailwind CSS](https://tailwindcss.com) augmented with custom dark cyberpunk aesthetic tokens (deep space voids `#030308`, electric cyber cyan `#00f0ff`, and thruster flame `#c97320`).
-- **Mascot Animation**: Reusable `<MascotRocket />` component faithfully encapsulating the studio's legacy $\pm 45^\circ$ cosine tilt and 5-stage staggered thruster exhaust animations.
-- **Devlog Hub**: Built-in Astro Content Collections supporting MDX for the *"Building an A- Studio in Public"* engineering series.
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) augmented with studio brand color tokens:
+  - **Deep Cosmos Black**: `#030303` (Primary web canvas)
+  - **Thruster Amber**: `#C97320` (Buttons, active highlights)
+  - **Porthole Cyan**: `#4CC9F0` (Accents, links, glow effects)
+  - **Rocket Scarlet**: `#E63946` (Badges, alert highlights)
+  - **Starlight White**: `#EEEEEE` (Primary text and headings)
+- **Mascot Animation**: Reusable `<MascotRocket />` component faithfully encapsulating the studio's legacy &plusmn;45&deg; cosine tilt and 5-stage staggered thruster exhaust animations.
+- **Devlog Hub**: Built-in Astro Content Collections supporting MDX for the upcoming *"Building an A- Studio in Public"* engineering series.
 - **CI/CD Deployment**: Automated GitHub Actions workflow (`deploy.yml`) deploying static builds directly to GitHub Pages with custom domain (`agogpixel.com`) and HTTPS enforcement.
 
 ---
@@ -84,10 +91,10 @@ agogpixel.github.io/
 │   ├── layouts/
 │   │   └── Layout.astro        # Global HTML shell, SEO metadata, fonts & styles
 │   ├── pages/
-│   │   ├── index.astro         # Studio homepage with hero & flagship game preview
-│   │   ├── about.astro         # Studio philosophy & The "A-" Manifesto
-│   │   ├── games/              # Flagship & prototype games showcase
-│   │   ├── devlogs/            # Devlog index and dynamic [...slug].astro reader
+│   │   ├── index.astro         # Studio homepage with hero & debut game teaser
+│   │   ├── about.astro         # Studio overview & The "A-" Manifesto
+│   │   ├── games/              # Games showcase and coming soon hub
+│   │   ├── devlogs/            # Devlog hub with coming soon status
 │   │   └── presskit/           # Studio factsheet, color palettes & asset downloads
 │   └── styles/
 │       └── global.css          # Tailwind base/utilities and cyberpunk ambiance
@@ -102,21 +109,21 @@ agogpixel.github.io/
 
 To publish a new devlog in the *"Building an A- Studio in Public"* series:
 
-1. Create a new `.mdx` file in `src/content/devlog/` (e.g., `002-godot-pixel-snap.mdx`).
+1. Create a new `.mdx` file in `src/content/devlog/` (e.g., `002-inertial-drifts.mdx`).
 2. Add the mandatory frontmatter schema:
 
 ```yaml
 ---
-title: "Pixel Snap & Inertial Drifts in Godot 4.4"
+title: "Tuning Inertial Drifts and Precision Thrusters"
 pubDate: 2026-10-20
 track: "Building an A- Studio in Public"
-tags: ["godot", "physics", "pixelart", "gamedev"]
-author: "kidthales & Antigravity"
-summary: "Solving sub-pixel jitter in 2D retro space games and fine-tuning responsive vector thrusters."
+tags: ["physics", "arcade", "gamedev"]
+author: "Agogpixel Team"
+summary: "Solving sub-pixel jitter in 2D retro arcade games and fine-tuning responsive vector propulsion."
 ---
 ```
 
-3. Write content using standard Markdown or MDX. Astro will automatically generate the static route at `/devlogs/<slug>/` and update the devlog index.
+3. Write content using standard Markdown or MDX. Astro will automatically compile the static routes and update the collections.
 
 ---
 
@@ -143,12 +150,11 @@ import MascotRocket from '../components/MascotRocket.astro';
 
 ---
 
-## 📜 Studio Philosophy & Guidelines
+## 📜 Studio Philosophy: The "A-" Standard
 
-- **The "A-" Manifesto**: High technical rigor combined with rapid shipping velocity. Favor native, scriptable, automated workflows over bureaucratic drag.
-- **Git Branching Standard**: Work is issue-driven using `<type>/web-<issue#>-<short-slug>`.
-- **Commit Format**: Conventional Commits (`feat:`, `fix:`, `chore:`) with AI co-authorship trailers.
-- **Merge Strategy**: PRs target `main` and use **Squash and Merge**.
+1. **Minus the Corporate Bloat**: No endless steering committees or 60-page design docs. We iterate, build, and ship.
+2. **Player-First Purity**: No predatory microtransactions, battle passes, or engagement traps. Pure arcade mechanics.
+3. **Relentless Craft & Velocity**: High technical rigor, lightweight architecture, and pride in shipping real software.
 
 ---
 
