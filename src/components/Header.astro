@@ -1,7 +1,9 @@
 ---
+const pathname = Astro.url.pathname;
+const isDevlogsActive = pathname.startsWith('/devlogs');
 ---
 
-<header class="w-full border-b border-cosmos-800/80 bg-cosmos-950/80 backdrop-blur-md">
+<header class="w-full border-b border-cosmos-800/80 bg-cosmos-950/80 backdrop-blur-md sticky top-0 z-50">
   <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
     <!-- Brand / Logo -->
     <a href="/" class="group flex items-center gap-3 transition-transform hover:scale-[1.02]">
@@ -14,5 +16,20 @@
         </span>
       </div>
     </a>
+
+    <!-- Primary Navigation -->
+    <nav aria-label="Primary Navigation" class="flex items-center gap-4 sm:gap-6">
+      <a
+        href="/devlogs"
+        class:list={[
+          'font-mono text-sm tracking-wide transition-colors px-3 py-1.5 rounded-md border',
+          isDevlogsActive
+            ? 'border-brand-cyan/50 bg-brand-cyan/10 text-brand-cyan font-semibold'
+            : 'border-transparent text-slate-300 hover:text-brand-cyan hover:border-cosmos-700 hover:bg-cosmos-900/60',
+        ]}
+      >
+        Devlogs
+      </a>
+    </nav>
   </div>
 </header>
