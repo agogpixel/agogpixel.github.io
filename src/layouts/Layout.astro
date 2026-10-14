@@ -10,8 +10,8 @@ export interface Props {
 }
 
 const {
-  title = 'Agogpixel Studio | Curious Software & Indie Games',
-  description = 'Independent game development studio building retro sci-fi arcade experiences, fast-paced games, and curious software engineering in public.',
+  title = 'Agogpixel | Curious Software Development',
+  description = 'An A- Studio. Curious Software Development.',
   image = '/assets/rocket_guinea_pig.png',
 } = Astro.props;
 
@@ -50,7 +50,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://agogpixe
       rel="stylesheet"
     />
   </head>
-  <body class="min-h-screen flex flex-col bg-void-950 text-slate-200">
+  <body class="min-h-screen flex flex-col bg-cosmos-950 text-slate-200">
     <Header />
     <main class="flex-1">
       <slot />

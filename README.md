@@ -1,8 +1,6 @@
-# Agogpixel Studio Web Portal
+# Agogpixel Web Portal
 
-The official web portal for **Agogpixel Studio** ([agogpixel.com](https://agogpixel.com)), an independent game studio crafting retro sci-fi arcade action, tight mechanics, and curious software.
-
-> *"AAA ambition. Indie grit. Minus the corporate bloat."*
+The official web portal for **Agogpixel** ([agogpixel.com](https://agogpixel.com)), an A- studio dedicated to curious software development.
 
 ---
 
@@ -11,9 +9,9 @@ The official web portal for **Agogpixel Studio** ([agogpixel.com](https://agogpi
 - **Static Framework**: [Astro v5](https://astro.build) configured for pure static generation (`output: "static"`), delivering near-instant loading with zero unnecessary client JavaScript.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com) configured with official studio brand colors:
   - **Deep Cosmos Black**: `#030303` (Primary web canvas)
-  - **Thruster Amber**: `#C97320` (Buttons, interactive elements)
+  - **Thruster Amber**: `#C97320` (Interactive highlights)
   - **Porthole Cyan**: `#4CC9F0` (Glows, accents)
-  - **Rocket Scarlet**: `#E63946` (Badges, highlights)
+  - **Rocket Scarlet**: `#E63946` (Badges, accents)
   - **Starlight White**: `#EEEEEE` (Headings, primary typography)
 - **Mascot Animation**: Studio animated rocket guinea pig vector illustration (`rocket_guinea_pig_animated.svg`) with embedded cosine rocking and multi-stage exhaust flame animations.
 - **CI/CD Deployment**: Automated GitHub Actions workflow (`deploy.yml`) deploying static builds to GitHub Pages with custom domain (`agogpixel.com`) and HTTPS enforcement.
@@ -69,8 +67,8 @@ agogpixel.github.io/
 │   └── CNAME                   # Custom domain mapping (agogpixel.com)
 ├── src/
 │   ├── components/
-│   │   ├── Footer.astro        # Minimal studio footer
-│   │   ├── Header.astro        # Clean studio header with logo and status mark
+│   │   ├── Footer.astro        # Clean studio footer
+│   │   ├── Header.astro        # Clean header with logo and status mark
 │   │   └── MascotRocket.astro  # Reusable mascot component
 │   ├── layouts/
 │   │   └── Layout.astro        # Global HTML shell, SEO metadata, fonts & styles
@@ -95,4 +93,4 @@ agogpixel.github.io/
 
 ## 📄 License & Copyright
 
-&copy; 2026 Agogpixel Studio. All rights reserved.
+&copy; 2026 Agogpixel. All rights reserved.
