@@ -1,0 +1,170 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MascotRocket from '../components/MascotRocket.astro';
+---
+
+<Layout
+  title="About Agogpixel Studio & The A- Manifesto"
+  description="Studio philosophy, human + AI co-founding story, and our A- engineering manifesto."
+>
+  <div class="py-16 md:py-24">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <!-- Page Header -->
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 rounded-full border border-cyber-cyan/30 bg-void-900/80 px-4 py-1.5 font-mono text-xs text-cyber-cyan mb-4 shadow-sm shadow-cyber-cyan/10">
+          <span>Studio Profile</span>
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl font-sans">
+          Curious Software & <br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan to-cyber-flame">
+            Human + AI Co-Creation
+          </span>
+        </h1>
+        <p class="mt-4 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+          How Agogpixel Studio was formed, our autonomous pair-programming methodology, and why we hold ourselves to the "A-" Standard.
+        </p>
+      </div>
+
+      <!-- Mascot Showcase -->
+      <div class="mb-16 flex justify-center">
+        <div class="rounded-2xl border border-void-800 bg-void-900/60 p-8 text-center flex flex-col items-center">
+          <MascotRocket size="md" animated={true} />
+          <p class="mt-4 font-mono text-xs text-slate-400">
+            The Agogpixel Mascot Rocket • Oscillating at $\pm 45^\circ$ with Staggered Exhaust
+          </p>
+        </div>
+      </div>
+
+      <!-- Narrative Section -->
+      <div class="space-y-16">
+        <!-- Human + AI Co-Founding -->
+        <section class="rounded-2xl border border-void-800 bg-void-900/40 p-8 md:p-10">
+          <span class="font-mono text-xs uppercase tracking-widest text-cyber-cyan font-semibold">Origin Story</span>
+          <h2 class="mt-2 text-2xl font-bold text-white sm:text-3xl font-sans">
+            Human + AI Pair Founding
+          </h2>
+          <div class="mt-4 space-y-4 text-sm sm:text-base leading-relaxed text-slate-300">
+            <p>
+              Agogpixel Studio was founded by <strong class="text-white">kidthales</strong> (founder & creative director) alongside <strong class="text-white">Antigravity</strong> (AI co-founding engineering agent). Rather than treating artificial intelligence merely as a passive autocomplete tool, we treat AI agents as active engineering teammates with defined domains, autonomous git workflows, and rigorous definition-of-done standards.
+            </p>
+            <p>
+              In our studio workflow, human vision provides the creative direction, aesthetic taste, architecture, and game-feel benchmarks. Autonomous agents handle feature implementation, automated verification, test runs, and continuous documentation.
+            </p>
+          </div>
+
+          <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6 font-mono text-xs">
+            <div class="rounded-xl border border-void-800 bg-void-950 p-5">
+              <div class="text-cyber-cyan font-bold text-sm mb-1">kidthales</div>
+              <div class="text-slate-400 mb-2">Founder & Creative Director</div>
+              <p class="text-slate-500 leading-normal">
+                Game design, systems architecture, narrative direction, retro arcade mechanics, and aesthetic direction.
+              </p>
+            </div>
+            <div class="rounded-xl border border-void-800 bg-void-950 p-5">
+              <div class="text-cyber-flame font-bold text-sm mb-1">Antigravity</div>
+              <div class="text-slate-400 mb-2">Autonomous AI Co-Engineer</div>
+              <p class="text-slate-500 leading-normal">
+                Issue dispatch, test-driven implementation, cross-platform build verification, git provenance, and knowledge capture.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- The "A-" Manifesto -->
+        <section class="rounded-2xl border border-cyber-cyan/20 bg-void-900/60 p-8 md:p-10 shadow-xl shadow-cyber-cyan/5">
+          <span class="font-mono text-xs uppercase tracking-widest text-cyber-flame font-semibold">Philosophy</span>
+          <h2 class="mt-2 text-2xl font-bold text-white sm:text-3xl font-sans">
+            The "A-" Manifesto
+          </h2>
+          <p class="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
+            In traditional game production and software development, teams often fall into the trap of seeking theoretical perfection ("A+"), leading to runaway scopes, bureaucratic paralysis, and unreleased prototypes. 
+          </p>
+          <p class="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
+            We target the <strong class="text-cyber-cyan">"A-" Standard</strong>: high technical rigor combined with unyielding shipping velocity. An "A-" studio moves fast, scripts relentlessly, maintains clean git history, and puts real software into players' hands.
+          </p>
+
+          <div class="mt-8 space-y-6">
+            <div class="flex items-start gap-4">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyber-cyan/10 font-mono text-xs font-bold text-cyber-cyan border border-cyber-cyan/30">
+                01
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-mono">Lean Velocity Over Process Bloat</h3>
+                <p class="mt-1 text-sm text-slate-400 leading-relaxed">
+                  No heavy corporate project management software or endless meetings. We use native shell scripts, clean PowerShell automation, GitHub Issues, and automated CLI tools.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyber-flame/10 font-mono text-xs font-bold text-cyber-flame border border-cyber-flame/30">
+                02
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-mono">Strict Provenance & Git Hygiene</h3>
+                <p class="mt-1 text-sm text-slate-400 leading-relaxed">
+                  Every commit adheres to Conventional Commits, includes co-authored agent attribution trailers, and connects to an issue. Squash-and-merge preserves a clean linear history on main.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyber-purple/10 font-mono text-xs font-bold text-cyber-purple border border-cyber-purple/30">
+                03
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-mono">Continuous Knowledge Capture</h3>
+                <p class="mt-1 text-sm text-slate-400 leading-relaxed">
+                  No insight is lost. Every subagent run concludes with a reflection gate: rules, constraints, runbooks, and deep architectural learnings are committed directly into repository documentation.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 font-mono text-xs font-bold text-emerald-400 border border-emerald-500/30">
+                04
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white font-mono">Radical Transparency & Building in Public</h3>
+                <p class="mt-1 text-sm text-slate-400 leading-relaxed">
+                  Our devlogs, architectural spikes, and performance benchmarks are published openly. What we learn while building games is shared with the broader indie development community.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tech Stack & Foundation -->
+        <section class="rounded-2xl border border-void-800 bg-void-900/40 p-8 md:p-10">
+          <span class="font-mono text-xs uppercase tracking-widest text-slate-400 font-semibold">Studio Foundation</span>
+          <h2 class="mt-2 text-2xl font-bold text-white sm:text-3xl font-sans">
+            Our Technology Stack
+          </h2>
+          <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+            <div class="rounded-xl border border-void-800 bg-void-950 p-4">
+              <div class="font-bold text-white text-sm mb-1">Game Engine</div>
+              <div class="text-cyber-cyan mb-2">Godot 4.4 Engine</div>
+              <p class="text-slate-400">
+                2D pixel physics, retro GPUParticles, high-performance C# / GDScript pipelines.
+              </p>
+            </div>
+            <div class="rounded-xl border border-void-800 bg-void-950 p-4">
+              <div class="font-bold text-white text-sm mb-1">Web Platform</div>
+              <div class="text-cyber-flame mb-2">Astro v5 + Tailwind</div>
+              <p class="text-slate-400">
+                Zero-JS by default, ultra-fast static output, MDX content collections, dark cyberpunk tokens.
+              </p>
+            </div>
+            <div class="rounded-xl border border-void-800 bg-void-950 p-4">
+              <div class="font-bold text-white text-sm mb-1">Agent Orchestration</div>
+              <div class="text-cyber-purple mb-2">Antigravity AI Subagents</div>
+              <p class="text-slate-400">
+                Multi-agent pair programming, automated build verifications, and persistent knowledge capture.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>

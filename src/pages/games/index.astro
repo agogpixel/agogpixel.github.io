@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="Games | Agogpixel Studio"
+  description="Explore games from Agogpixel Studio, including our flagship retro sci-fi arcade survival game Escape from Cygnus X-1."
+>
+  <div class="py-16 md:py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-16 text-center max-w-3xl mx-auto">
+        <div class="inline-flex items-center gap-2 rounded-full border border-cyber-cyan/30 bg-void-900/80 px-4 py-1.5 font-mono text-xs text-cyber-cyan mb-4">
+          <span>Studio Productions</span>
+        </div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl font-sans">
+          Games Showcase
+        </h1>
+        <p class="mt-4 text-slate-300 text-base sm:text-lg">
+          Retro arcade thrill, tight physics loops, and razor-sharp pixel game feel.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Project 1: Escape from Cygnus X-1 -->
+        <div class="rounded-2xl border border-void-800 bg-void-900/70 p-6 md:p-8 flex flex-col justify-between hover:border-cyber-cyan/40 transition-colors">
+          <div>
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-cyber-flame/30 bg-cyber-flame/10 px-3 py-1 font-mono text-xs text-cyber-flame">
+                <span class="h-1.5 w-1.5 rounded-full bg-cyber-flame animate-ping"></span>
+                Flagship Project • In Active Development
+              </span>
+              <span class="font-mono text-xs text-slate-500">Godot 4.4 Engine</span>
+            </div>
+
+            <div class="aspect-video w-full rounded-xl bg-void-950 border border-void-800 flex items-center justify-center mb-6 relative overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-t from-void-950 via-transparent to-cyber-cyan/5"></div>
+              <img src="/assets/rocket_guinea_pig.png" alt="Cygnus X-1 Spacecraft" class="h-20 w-20 object-contain relative z-10" />
+            </div>
+
+            <h2 class="text-2xl font-bold text-white font-sans">
+              Escape from Cygnus X-1
+            </h2>
+
+            <p class="mt-3 text-sm text-slate-300 leading-relaxed">
+              Pilot an experimental spacecraft caught in the gravitational vortex of Cygnus X-1. Master inertia-driven vector thrusters, dodge high-velocity asteroid belts, and survive the collapsing event horizon.
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-2 font-mono text-xs">
+              <span class="rounded bg-void-800 px-2.5 py-1 text-slate-300">360x720 Native Pixel-Snap</span>
+              <span class="rounded bg-void-800 px-2.5 py-1 text-slate-300">Retro Thrusters</span>
+              <span class="rounded bg-void-800 px-2.5 py-1 text-slate-300">Arcade Survival</span>
+              <span class="rounded bg-void-800 px-2.5 py-1 text-slate-300">Synth OST</span>
+            </div>
+          </div>
+
+          <div class="mt-8 border-t border-void-800 pt-4 flex items-center justify-between font-mono text-xs">
+            <span class="text-slate-400">Target Platforms: PC / Steam / Web</span>
+            <a href="https://github.com/agogpixel" class="text-cyber-cyan hover:underline">Track on GitHub →</a>
+          </div>
+        </div>
+
+        <!-- Project 2: Prototype Labs -->
+        <div class="rounded-2xl border border-void-800/60 bg-void-900/30 p-6 md:p-8 flex flex-col justify-between border-dashed">
+          <div>
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-void-800 px-3 py-1 font-mono text-xs text-slate-400">
+                Studio Lab Spikes
+              </span>
+              <span class="font-mono text-xs text-slate-500">Research & Prototypes</span>
+            </div>
+
+            <div class="aspect-video w-full rounded-xl bg-void-950/60 border border-void-800/60 flex flex-col items-center justify-center mb-6 text-center p-6">
+              <div class="font-mono text-sm text-slate-400 font-bold mb-1">Experimental Arcade Prototypes</div>
+              <p class="text-xs text-slate-500 font-mono max-w-xs">
+                Micro-games and mechanics experiments built by human + AI subagents during 48-hour sprints.
+              </p>
+            </div>
+
+            <h2 class="text-2xl font-bold text-slate-200 font-sans">
+              Agogpixel Arcade Lab
+            </h2>
+
+            <p class="mt-3 text-sm text-slate-400 leading-relaxed">
+              Our incubator for novel physics experiments, procedural audio experiments, and custom retro shader pipelines. Standalone mechanics will be shared and playtested on itch.io and web portal embeds.
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-2 font-mono text-xs">
+              <span class="rounded bg-void-950 px-2.5 py-1 text-slate-400">Rapid Spikes</span>
+              <span class="rounded bg-void-950 px-2.5 py-1 text-slate-400">Procedural Audio</span>
+              <span class="rounded bg-void-950 px-2.5 py-1 text-slate-400">Shader Experiments</span>
+            </div>
+          </div>
+
+          <div class="mt-8 border-t border-void-800 pt-4 flex items-center justify-between font-mono text-xs text-slate-500">
+            <span>Status: Incubating</span>
+            <span>Coming Soon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

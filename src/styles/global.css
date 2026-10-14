@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-void-950 text-slate-100 antialiased selection:bg-cyber-cyan/30 selection:text-cyber-cyan;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  body {
+    @apply min-h-screen flex flex-col bg-void-950 text-slate-200;
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 240, 255, 0.07), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 50%, rgba(201, 115, 32, 0.04), transparent);
+    background-attachment: fixed;
+  }
+}
