@@ -29,7 +29,15 @@ All web styles and Tailwind tokens must conform strictly to the studio brand spe
 ## Content Collections & Devlogs
 - Devlogs live in `src/content/devlog/`.
 - Mandatory frontmatter: `title`, `pubDate`, `track`, `tags`, `author`, `summary`.
-- Images must be placed in `src/assets/` and imported as optimized Astro `<Image />` components.
+- Static and public media assets must be placed in `public/assets/`. Do NOT store redundant copies in `src/assets/`.
+
+## GitHub Pages Deployment Standard
+- **Disable Legacy Jekyll**: GitHub Pages defaults to legacy branch builds which fail on `.astro` frontmatter (`YAML Exception: mapping values are not allowed in this context`).
+- Always configure the repository with `build_type: "workflow"` via GitHub API:
+  ```bash
+  gh api -X PUT repos/agogpixel/agogpixel.github.io/pages -F build_type=workflow
+  ```
+- Deployment must run via `.github/workflows/deploy.yml` utilizing `actions/upload-pages-artifact@v3` and `actions/deploy-pages@v4`.
 
 ## Performance & Quality
 - Target 100 Lighthouse score on desktop and mobile.
