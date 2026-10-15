@@ -10,3 +10,4 @@ This directory serves as the persistent knowledge repository for Architecture De
 ## Index of Learnings
 <!-- Format: - [Title](path) - Brief summary (Date) -->
 - [ADR-001: Astro v5 + Tailwind Web Portal Architecture & Mascot Motion Port](ADR-001-astro-tailwind-portal-architecture.md) - Architecture decision for Astro v5, Tailwind tokens, scoped MascotRocket motion, and GitHub Pages deployment (2026-10-14)
+- [Portal Visual Identity, Minimalist Architecture & Paul Tol Color Science Audit](../design/portal_visual_identity_and_color_science_audit.md) - Forensic audit of AI-template tropes, `kidthales.com` semantic landmark & bijective color architecture, and Paul Tol CVD/luminance evaluation for `agogpixel.com` (2026-10-14)
