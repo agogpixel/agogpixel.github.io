@@ -3,33 +3,36 @@ const pathname = Astro.url.pathname;
 const isDevlogsActive = pathname.startsWith('/devlogs');
 ---
 
-<header class="w-full border-b border-cosmos-800/80 bg-cosmos-950/80 backdrop-blur-md sticky top-0 z-50">
-  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-    <!-- Brand / Logo -->
-    <a href="/" class="group flex items-center gap-3 transition-transform hover:scale-[1.02]">
-      <div class="relative flex h-10 w-10 items-center justify-center rounded-lg border border-brand-cyan/30 bg-cosmos-900 p-1 shadow-sm shadow-brand-cyan/20">
-        <img src="/assets/rocket_guinea_pig.png" alt="Agogpixel Logo" class="h-8 w-8 object-contain" />
-      </div>
-      <div class="flex flex-col">
-        <span class="font-mono text-base font-bold tracking-wider text-brand-starlight group-hover:text-brand-cyan transition-colors">
+<header class="w-full border-b border-cosmos-600 bg-cosmos-950">
+  <nav aria-label="Primary Navigation" class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+    <ul class="flex items-center gap-3 list-none m-0 p-0">
+      <li class="brand-item">
+        <a href="/" class="inline-flex items-center gap-2.5 no-underline font-mono text-base font-bold tracking-wider text-brand-starlight hover:text-brand-cyan transition-colors">
+          <img
+            src="/assets/pixel/rocket_guinea_pig_pixel.svg"
+            alt="Agogpixel Rocket Guinea Pig"
+            class="h-8 w-8 object-contain"
+          />
           AGOGPIXEL
-        </span>
-      </div>
-    </a>
+        </a>
+      </li>
+    </ul>
 
-    <!-- Primary Navigation -->
-    <nav aria-label="Primary Navigation" class="flex items-center gap-4 sm:gap-6">
-      <a
-        href="/devlogs"
-        class:list={[
-          'font-mono text-sm tracking-wide transition-colors px-3 py-1.5 rounded-md border',
-          isDevlogsActive
-            ? 'border-brand-cyan/50 bg-brand-cyan/10 text-brand-cyan font-semibold'
-            : 'border-transparent text-slate-300 hover:text-brand-cyan hover:border-cosmos-700 hover:bg-cosmos-900/60',
-        ]}
-      >
-        Devlogs
-      </a>
-    </nav>
-  </div>
+    <ul class="flex items-center gap-4 list-none m-0 p-0 font-mono text-sm">
+      <li>
+        <a
+          href="/devlogs"
+          aria-current={isDevlogsActive ? 'page' : undefined}
+          class:list={[
+            'px-1 py-0.5 transition-colors underline-offset-4',
+            isDevlogsActive
+              ? 'text-brand-cyan underline decoration-brand-cyan font-semibold'
+              : 'text-brand-starlight no-underline hover:text-brand-cyan hover:underline',
+          ]}
+        >
+          Devlogs
+        </a>
+      </li>
+    </ul>
+  </nav>
 </header>

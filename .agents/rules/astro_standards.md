@@ -10,14 +10,25 @@ globs: ["**/*"]
 - **Styling**: Tailwind CSS with dark-mode cosmos aesthetic tokens.
 - **Content**: MDX devlogs for *"Building an A- Studio in Public"*.
 
-## Studio Brand Color Palette
-All web styles and Tailwind tokens must conform strictly to the studio brand specifications:
-- **Deep Cosmos Black**: `#030303` (Primary web canvas)
-- **Thruster Amber**: `#C97320` (Buttons, interactive highlights)
-- **Porthole Cyan**: `#4CC9F0` (Glows, accents, active marks)
-- **Rocket Scarlet**: `#E63946` (Alerts, combat highlights, badges)
-- **Starlight White**: `#EEEEEE` (Body typography, primary headings)
-- **Neutral Ramp & Perceptual Accessibility Reference**: Avoid arbitrary blue-tinted Tailwind `slate-*` grays and generic AI-template tropes (radial blur blobs, pulsing status pills). See [`docs/design/portal_visual_identity_and_color_science_audit.md`](../../docs/design/portal_visual_identity_and_color_science_audit.md) for the `kidthales.com` minimalist landmark patterns, **Lunar Grey** (`#A6A6A6`) / **Hull Charcoal** (`#4E4E4E`) neutral ramp, and Paul Tol deuteranopia/luminance calibration options (`#C97320` vs `#E63946` $\Delta L^* = 4.8$ collision analysis).
+## Studio Brand Color Palette (Option A Calibrated Ramp)
+All web styles and Tailwind tokens must conform strictly to Option A specifications (calibrated per Paul Tol color science and `kidthales.com` minimalist architecture):
+- **Deep Cosmos Black**: `#030303` (Primary web canvas `--ap-bg`)
+- **Cosmos Surfaces**: `#0A0A0A` (`cosmos-900`), `#141414` (`cosmos-800`), `#1F1F1F` (`cosmos-700`), `#2B2B2B` (`cosmos-600` structural dividers)
+- **Hull Charcoal**: `#4E4E4E` (`brand.charcoal`, interactive rules, `<hr>`, `<blockquote>` border)
+- **Lunar Grey**: `#A6A6A6` (`brand.lunar`, muted metadata, subtitles, dates, AAA `8.47:1`)
+- **Starlight White**: `#EEEEEE` (`brand.starlight`, body copy, headings, AAA `17.78:1`)
+- **Porthole Cyan**: `#4CC9F0` (`brand.cyan`, primary links, active navigation, AAA `10.72:1`) / `#163A47` (`brand.cyan-dark`, selection & subtle border)
+- **Thruster Amber**: `#C97320` (`brand.amber`, outer plume, button borders)
+- **Ignition Amber (UI)**: `#F09235` (`brand.amber-ui`, calibrated AAA `8.71:1` text & secondary links, $\Delta L^* = 16.9$ deuteranopia separation vs. Scarlet) / `#3D240C` (`brand.amber-dark`, callout background)
+- **Rocket Scarlet**: `#E63946` (`brand.scarlet`, fins/combat badges) / `#EE5566` (`brand.scarlet-ui`, calibrated alert text) / `#421419` (`brand.scarlet-dark`, alert surface)
+
+## Anti-Trope & Web UI Guardrails
+1. **Zero Cool-Grey (`slate-*`) Contamination**: Never mix Tailwind's blue-tinted `slate-*` utility classes with `#030303` Cosmos Black. Secondary text and structural borders must use `brand-lunar` (`#A6A6A6`), `brand-charcoal` (`#4E4E4E`), and `cosmos-600` (`#2B2B2B`).
+2. **No Ambient Blur Blobs or Radial Glow Hazes**: Do not place `blur-[100px]` neon orbs or fixed radial-gradient color hazes over `#030303` Cosmos Black.
+3. **No Pulsing Status Pills for Static Copy**: Do not wrap static headlines or studio mottos in rounded-full pill badges with `animate-pulse` dots. Use semantic `<hgroup>` elements with uppercase monospace eyebrow labels (`[ An A- Studio ]`).
+4. **No Glassmorphism or Neon Drop-Shadow Buttons**: Avoid `backdrop-blur-md` sticky navbars, `shadow-brand-cyan/*` glowing icon boxes, and `hover:-translate-y-0.5` card lifts. Separate landmarks with crisp `1px solid` (`0.0625rem`) borders, `0.25rem` (`4px`) border-radius, and zero box-shadow buttons.
+5. **Bracketed Terminal Navigation (`[Link]`)**: Frame header navigation items with monospace square brackets (`[Devlogs]`) via CSS pseudo-elements (`header nav ul li:not(.brand-item)::before { content: '['; }`).
+6. **Mascot Asset Usage**: Use `rocket_guinea_pig_animated.svg` for hero focal points (`>=160px`), and `pixel/rocket_guinea_pig_pixel.svg` or `favicon.svg` (never downscaled raster PNGs) for `20px`–`32px` header/footer emblems.
 
 ## Viewport & Layout Scrolling Standards
 - **Single-Viewport Fit (Landing Hero)**: For hero/jumbotron landing pages (`src/pages/index.astro`), the full layout (Header + Hero + Footer) must fit within `100vh` / `100dvh` without vertical scrolling on desktop (`scrollable={false}` default on `Layout.astro`, which applies `h-screen min-h-[100dvh]` with `md:overflow-y-hidden`).
