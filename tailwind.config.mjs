@@ -9,40 +9,28 @@ export default {
       colors: {
         cosmos: {
           950: '#030303', // Deep Cosmos Black (master canvas)
-          900: '#0a0a0a',
-          800: '#141414',
-          700: '#1f1f1f',
-          600: '#2b2b2b',
+          900: '#0a0a0a', // Code / surface block
+          800: '#141414', // Striped row / subtle fill
+          700: '#1f1f1f', // Hairline border
+          600: '#2b2b2b', // Structural divider
         },
         brand: {
-          amber: '#C97320',    // Thruster Amber
-          scarlet: '#E63946',  // Rocket Scarlet
-          cyan: '#4CC9F0',     // Porthole Cyan
-          starlight: '#EEEEEE',// Starlight White
-        },
-        // Compatibility tokens mapped to brand guide
-        void: {
-          950: '#030303',
-          900: '#0a0a0a',
-          800: '#141414',
-          700: '#1f1f1f',
-          600: '#2b2b2b',
-        },
-        cyber: {
-          cyan: '#4CC9F0',     // Porthole Cyan (brand spec)
-          neon: '#4CC9F0',
-          flame: '#C97320',    // Thruster Amber (brand spec)
-          amber: '#C97320',
-          scarlet: '#E63946',  // Rocket Scarlet (brand spec)
-          purple: '#a855f7',
+          starlight: '#EEEEEE',   // Primary typography (L*=94.1, CR=17.78:1)
+          lunar: '#A6A6A6',       // Muted metadata & subtitles (L*=68.1, CR=8.47:1)
+          charcoal: '#4E4E4E',    // Structural 1px rules & controls (L*=33.2, CR=2.48:1)
+          cyan: '#4CC9F0',        // Porthole Cyan primary link/accent (L*=75.8, CR=10.72:1)
+          'cyan-dark': '#163A47', // Selection & subtle cyan border (Tol dark role)
+          amber: '#C97320',       // Thruster Amber border/plume accent (L*=56.9, CR=5.85:1)
+          'amber-ui': '#F09235',  // Calibrated AAA & CVD-safe amber text (L*=69.0, CR=8.71:1)
+          'amber-dark': '#3D240C',// Subtle amber callout border/surface (Tol dark role)
+          scarlet: '#E63946',     // Rocket Scarlet badge/fin accent (L*=52.1, CR=4.95:1)
+          'scarlet-ui': '#EE5566',// Calibrated alert text (L*=57.7, CR=6.02:1)
+          'scarlet-dark': '#421419',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', 'monospace'],
-      },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

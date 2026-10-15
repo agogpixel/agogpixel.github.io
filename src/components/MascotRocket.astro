@@ -1,177 +1,35 @@
 ---
 export interface Props {
   size?: 'sm' | 'md' | 'lg';
-  animated?: boolean;
+  variant?: 'vector' | 'pixel';
   class?: string;
 }
 
 const {
   size = 'md',
-  animated = true,
+  variant = 'vector',
   class: className = '',
 } = Astro.props;
 
-const sizeClasses = {
-  sm: 'w-20 h-20 scale-75',
-  md: 'w-28 h-28 scale-100',
-  lg: 'w-44 h-44 scale-[1.55]',
+const sizeMap = {
+  sm: 'h-16 w-16',
+  md: 'h-32 w-32',
+  lg: 'h-64 w-64',
 };
+
+const assetMap = {
+  vector: '/assets/rocket_guinea_pig_animated.svg',
+  pixel: '/assets/pixel/rocket_guinea_pig_pixel.svg',
+};
+
+const src = assetMap[variant] || assetMap.vector;
 ---
 
-<div class:list={['mascot-wrapper inline-flex items-center justify-center select-none overflow-visible', sizeClasses[size], className]}>
-  <div class:list={['cosine-animation-container', { 'is-animated': animated }]}>
-    <div class="logo" role="img" aria-label="Agogpixel Mascot Rocket"></div>
-    <div class:list={['line-scale', { 'is-flame-animated': animated }]}>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-  </div>
+<div class:list={['inline-flex items-center justify-center select-none', className]}>
+  <img
+    src={src}
+    alt="Agogpixel Rocket Guinea Pig"
+    class:list={['object-contain select-none', sizeMap[size] || sizeMap.md]}
+    loading="eager"
+  />
 </div>
-
-<style>
-  .mascot-wrapper {
-    transform-origin: center center;
-  }
-
-  .cosine-animation-container {
-    display: inline-block;
-    position: relative;
-    width: 100px;
-    height: 100px;
-    transform-origin: center center;
-  }
-
-  .cosine-animation-container.is-animated {
-    animation: cosine 3s infinite linear;
-  }
-
-  .logo {
-    background-image: url('/assets/rocket_guinea_pig.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    height: 100px;
-    width: 100px;
-    position: relative;
-    z-index: 10;
-  }
-
-  .line-scale {
-    left: -64px;
-    position: relative;
-    top: -56px;
-    z-index: 0;
-    text-align: center;
-  }
-
-  .line-scale > div {
-    background-color: #c97320;
-    border-radius: 2px;
-    display: inline-block;
-    margin: 2px;
-    position: relative;
-    box-shadow: 0 0 6px rgba(201, 115, 32, 0.5);
-  }
-
-  .line-scale.is-flame-animated > div {
-    animation-fill-mode: both;
-  }
-
-  .line-scale.is-flame-animated > div:nth-child(1) {
-    animation: line-scale 1s 0s infinite cubic-bezier(0.18, 1.08, 0.2, 0.68);
-    height: 7px;
-    top: -14px;
-    width: 1px;
-  }
-
-  .line-scale.is-flame-animated > div:nth-child(2) {
-    animation: line-scale 1s -0.1s infinite cubic-bezier(0.18, 1.08, 0.2, 0.68);
-    height: 14px;
-    top: -10.5px;
-    width: 2px;
-  }
-
-  .line-scale.is-flame-animated > div:nth-child(3) {
-    animation: line-scale 1s -0.2s infinite cubic-bezier(0.18, 1.08, 0.2, 0.68);
-    height: 21px;
-    top: -7px;
-    width: 3px;
-  }
-
-  .line-scale.is-flame-animated > div:nth-child(4) {
-    animation: line-scale 1s -0.3s infinite cubic-bezier(0.18, 1.08, 0.2, 0.68);
-    height: 28px;
-    top: -3.5px;
-    width: 4px;
-  }
-
-  .line-scale.is-flame-animated > div:nth-child(5) {
-    animation: line-scale 1s -0.4s infinite cubic-bezier(0.18, 1.08, 0.2, 0.68);
-    height: 35px;
-    top: 0;
-    width: 5px;
-  }
-
-  .line-scale:not(.is-flame-animated) > div:nth-child(1) {
-    height: 7px;
-    top: -14px;
-    width: 1px;
-  }
-
-  .line-scale:not(.is-flame-animated) > div:nth-child(2) {
-    height: 14px;
-    top: -10.5px;
-    width: 2px;
-  }
-
-  .line-scale:not(.is-flame-animated) > div:nth-child(3) {
-    height: 21px;
-    top: -7px;
-    width: 3px;
-  }
-
-  .line-scale:not(.is-flame-animated) > div:nth-child(4) {
-    height: 28px;
-    top: -3.5px;
-    width: 4px;
-  }
-
-  .line-scale:not(.is-flame-animated) > div:nth-child(5) {
-    height: 35px;
-    top: 0;
-    width: 5px;
-  }
-
-  @keyframes cosine {
-    0% {
-      transform: rotate(0deg);
-    }
-    25% {
-      transform: rotate(-45deg);
-    }
-    50% {
-      transform: rotate(0deg);
-    }
-    75% {
-      transform: rotate(45deg);
-    }
-    100% {
-      transform: rotate(0deg);
-    }
-  }
-
-  @keyframes line-scale {
-    0% {
-      transform: scaley(1);
-    }
-    50% {
-      transform: scaley(0);
-    }
-    100% {
-      transform: scaley(1);
-    }
-  }
-</style>
