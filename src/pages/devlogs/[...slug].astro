@@ -31,48 +31,43 @@ const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
   scrollable={true}
 >
   <article class="relative w-full max-w-3xl mx-auto px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-    <!-- Ambient Background Glow -->
-    <div class="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -z-10 overflow-hidden">
-      <div class="h-[240px] w-[480px] rounded-full bg-brand-cyan/10 blur-[110px] filter"></div>
-    </div>
-
     <!-- Breadcrumb / Back-Link -->
     <nav aria-label="Breadcrumb" class="mb-8">
       <a
         href="/devlogs"
-        class="inline-flex items-center gap-2 font-mono text-xs text-slate-400 hover:text-brand-cyan transition-colors group"
+        class="inline-flex items-center gap-1.5 font-mono text-xs text-brand-lunar hover:text-brand-cyan transition-colors underline-offset-4"
       >
-        <span class="group-hover:-translate-x-0.5 transition-transform" aria-hidden="true">&larr;</span>
+        <span aria-hidden="true">&larr;</span>
         <span>Back to Devlogs</span>
       </a>
     </nav>
 
     <!-- Article Header -->
-    <header class="border-b border-cosmos-800 pb-8 mb-10">
+    <header class="border-b border-cosmos-600 pb-8 mb-10">
       <div class="flex flex-wrap items-center gap-3 font-mono text-xs mb-4">
-        <span class="inline-flex items-center rounded-md border border-brand-cyan/30 bg-brand-cyan/10 px-2.5 py-0.5 font-medium text-brand-cyan">
+        <span class="inline-flex items-center rounded border border-brand-cyan/40 bg-brand-cyan-dark/40 px-2.5 py-0.5 font-medium text-brand-cyan">
           {post.data.track}
         </span>
         <span class="text-cosmos-600">&bull;</span>
-        <time datetime={post.data.pubDate.toISOString()} class="text-slate-400">
+        <time datetime={post.data.pubDate.toISOString()} class="text-brand-lunar">
           {formattedDate}
         </time>
         <span class="text-cosmos-600">&bull;</span>
-        <span class="text-brand-amber">{post.data.author}</span>
+        <span class="text-brand-amber-ui">{post.data.author}</span>
       </div>
 
       <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-brand-starlight font-sans leading-tight">
         {post.data.title}
       </h1>
 
-      <p class="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed">
+      <p class="mt-4 text-base sm:text-lg text-brand-starlight leading-relaxed">
         {post.data.summary}
       </p>
 
       <!-- Tag Chips -->
       <div class="mt-6 flex flex-wrap items-center gap-2">
         {post.data.tags.map((tag) => (
-          <span class="rounded bg-cosmos-900 px-2.5 py-1 font-mono text-xs text-slate-400 border border-cosmos-800">
+          <span class="rounded bg-cosmos-900 px-2.5 py-1 font-mono text-xs text-brand-lunar border border-cosmos-600">
             #{tag}
           </span>
         ))}
@@ -81,25 +76,26 @@ const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
 
     <!-- Rendered MDX Content -->
     <div
-      class="prose prose-invert prose-slate max-w-none
+      class="prose prose-invert max-w-none
         prose-headings:font-sans prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-brand-starlight
-        prose-h1:text-2xl sm:prose-h1:text-3xl prose-h2:text-xl sm:prose-h2:text-2xl prose-h2:border-b prose-h2:border-cosmos-800 prose-h2:pb-2
-        prose-p:text-slate-300 prose-p:leading-relaxed
-        prose-a:text-brand-cyan prose-a:no-underline hover:prose-a:underline
+        prose-h1:text-2xl sm:prose-h1:text-3xl prose-h2:text-xl sm:prose-h2:text-2xl prose-h2:border-b prose-h2:border-cosmos-600 prose-h2:pb-2
+        prose-p:text-brand-starlight prose-p:leading-relaxed
+        prose-a:text-brand-cyan prose-a:underline prose-a:underline-offset-4 hover:prose-a:text-brand-starlight
         prose-strong:text-brand-starlight
-        prose-code:font-mono prose-code:text-brand-amber prose-code:bg-cosmos-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-        prose-pre:bg-cosmos-900 prose-pre:border prose-pre:border-cosmos-800 prose-pre:rounded-xl
-        prose-blockquote:border-l-brand-amber prose-blockquote:bg-cosmos-900/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:text-slate-300
-        prose-img:rounded-xl prose-img:border prose-img:border-cosmos-800"
+        prose-code:font-mono prose-code:text-brand-amber-ui prose-code:bg-cosmos-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
+        prose-pre:bg-cosmos-900 prose-pre:border prose-pre:border-cosmos-600 prose-pre:rounded
+        prose-blockquote:border-l-brand-charcoal prose-blockquote:bg-transparent prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:text-brand-lunar
+        prose-li:marker:text-brand-lunar [list-style-type:square]
+        prose-img:rounded prose-img:border prose-img:border-cosmos-600"
     >
       <Content />
     </div>
 
     <!-- Article Footer -->
-    <footer class="mt-14 pt-8 border-t border-cosmos-800 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
+    <footer class="mt-14 pt-8 border-t border-cosmos-600 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
       <a
         href="/devlogs"
-        class="inline-flex items-center gap-2 text-slate-400 hover:text-brand-cyan transition-colors"
+        class="inline-flex items-center gap-2 text-brand-lunar hover:text-brand-cyan transition-colors"
       >
         <span aria-hidden="true">&larr;</span>
         <span>All Devlogs</span>
@@ -107,7 +103,7 @@ const formattedDate = post.data.pubDate.toLocaleDateString('en-US', {
 
       <a
         href="/rss.xml"
-        class="inline-flex items-center gap-2 text-brand-amber hover:text-brand-cyan transition-colors"
+        class="inline-flex items-center gap-2 text-brand-amber-ui hover:text-brand-cyan transition-colors"
       >
         <span>Subscribe via RSS</span>
         <span aria-hidden="true">&rarr;</span>
