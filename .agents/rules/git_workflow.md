@@ -1,4 +1,4 @@
-﻿---
+---
 description: Git workflow, branch naming conventions, commit attribution, and PR rules
 globs: ["**/*"]
 ---
@@ -31,5 +31,7 @@ When developing features, creating branches, and committing code in this workspa
   ```bash
   git push -u origin <type>/web-<issue#>-<short-slug>
   ```
-- **Autonomous PR Creation**: Subagents create Pull Requests autonomously upon task completion via `gh pr create` (or `New-StudioPR.ps1`) targeting `main`.
+- **Autonomous PR Creation & Body Formatting**: Subagents create Pull Requests autonomously upon task completion.
+  - **CRITICAL: PowerShell Backtick Escape Corruption**: Never pass markdown containing inline backticks via `gh pr create --body "..."` or double-quoted PowerShell strings. In PowerShell, backticks in double quotes are escape characters (e.g. `` `e `` becomes ESC/`^[`, `` `t `` becomes TAB, `` `a `` becomes BEL/`^G`), which corrupts PR descriptions.
+  - **Mandatory PR Body File**: Always write the PR markdown body to a temporary file using a single-quoted here-string (`@' ... '@`) or explicit UTF-8 file, and pass `gh pr create --body-file <path>` (or invoke `New-StudioPR.ps1`).
 - **Merge Strategy**: All issue PRs use **Squash and Merge** to maintain a clean linear history on `main`.
