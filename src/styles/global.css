@@ -3,16 +3,45 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: dark;
+    --ap-bg: #030303;
+    --ap-surface: #0a0a0a;
+    --ap-border-subtle: #2b2b2b;
+    --ap-border-muted: #4e4e4e;
+    --ap-color: #eeeeee;
+    --ap-muted-color: #a6a6a6;
+    --ap-primary: #4cc9f0;
+    --ap-primary-bg: #163a47;
+    --ap-secondary: #f09235;
+    --ap-secondary-border: #c97320;
+    --ap-alert: #ee5566;
+    --ap-border-radius: 0.25rem;
+    --ap-border-width: 0.0625rem;
+  }
+
   html {
-    @apply bg-cosmos-950 text-brand-starlight antialiased selection:bg-brand-cyan/30 selection:text-brand-cyan;
+    @apply bg-cosmos-950 text-brand-starlight antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--ap-primary-bg);
+    color: var(--ap-color);
   }
 
   body {
-    @apply min-h-screen flex flex-col bg-cosmos-950 text-slate-200;
-    background-image: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(76, 201, 240, 0.08), transparent),
-      radial-gradient(ellipse 60% 40% at 100% 50%, rgba(201, 115, 32, 0.05), transparent);
-    background-attachment: fixed;
+    @apply min-h-screen flex flex-col bg-cosmos-950 text-brand-starlight;
+  }
+
+  /* kidthales.com bracketed navigation convention */
+  header nav ul li:not(.brand-item)::before {
+    content: '[';
+    color: var(--ap-border-muted);
+  }
+  header nav ul li:not(.brand-item)::after {
+    content: ']';
+    color: var(--ap-border-muted);
   }
 }
