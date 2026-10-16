@@ -51,3 +51,83 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  notify:
+    name: Notify Discord (#dev-ci-builds)
+    needs: [build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Discord Webhook
+        shell: bash
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_CI_WEBHOOK }}
+          JOB_STATUS: ${{ contains(needs.*.result, 'failure') && 'failure' || (contains(needs.*.result, 'cancelled') && 'cancelled' || 'success') }}
+          REPO_NAME: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          ACTOR: ${{ github.actor }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          RUN_ID: ${{ github.run_id }}
+          SERVER_URL: ${{ github.server_url }}
+        run: |
+          if [ -z "$WEBHOOK_URL" ]; then
+            echo "Warning: No DISCORD_CI_WEBHOOK configured. Skipping notification."
+            exit 0
+          fi
+
+          if [ "$JOB_STATUS" = "success" ]; then
+            COLOR=5032432
+            STATUS_ICON="✅"
+            TITLE="Portal Deploy Passed: $REPO_NAME"
+          elif [ "$JOB_STATUS" = "failure" ]; then
+            COLOR=15088454
+            STATUS_ICON="❌"
+            TITLE="Portal Deploy Failed: $REPO_NAME"
+          else
+            COLOR=13202208
+            STATUS_ICON="⚠️"
+            TITLE="Portal Deploy Cancelled: $REPO_NAME"
+          fi
+
+          SHORT_SHA=$(echo "$COMMIT_SHA" | cut -c1-7)
+          RUN_URL="$SERVER_URL/$REPO_NAME/actions/runs/$RUN_ID"
+
+          PAYLOAD=$(cat <<EOF
+          {
+            "username": "Agogpixel CI/CD",
+            "avatar_url": "https://raw.githubusercontent.com/agogpixel/agogpixel.github.io/main/public/assets/rocket_guinea_pig.png",
+            "embeds": [
+              {
+                "title": "$STATUS_ICON $TITLE",
+                "color": $COLOR,
+                "description": "GitHub Pages portal workflow completed for branch \`$BRANCH_NAME\`.",
+                "url": "$RUN_URL",
+                "author": {
+                  "name": "Agogpixel Studio CI",
+                  "icon_url": "https://raw.githubusercontent.com/agogpixel/agogpixel.github.io/main/public/assets/favicon/favicon-32x32.png"
+                },
+                "fields": [
+                  { "name": "Repository", "value": "\`$REPO_NAME\`", "inline": true },
+                  { "name": "Branch", "value": "\`$BRANCH_NAME\`", "inline": true },
+                  { "name": "Triggered By", "value": "@$ACTOR", "inline": true },
+                  { "name": "Workflow", "value": "$WORKFLOW_NAME", "inline": true },
+                  { "name": "Commit", "value": "[\`$SHORT_SHA\`]($SERVER_URL/$REPO_NAME/commit/$COMMIT_SHA)", "inline": true },
+                  { "name": "Run Details", "value": "[View Run]($RUN_URL)", "inline": true }
+                ],
+                "footer": {
+                  "text": "Agogpixel Automation • A- Standard",
+                  "icon_url": "https://raw.githubusercontent.com/agogpixel/agogpixel.github.io/main/public/assets/favicon/favicon-16x16.png"
+                },
+                "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -s -S -X POST \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "$WEBHOOK_URL" > /dev/null || echo "Warning: Discord webhook dispatch failed."
+
