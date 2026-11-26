@@ -1,0 +1,395 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseDocument } from 'yaml';
+
+export interface WorkflowContractResult {
+  ok: boolean;
+  errors: string[];
+}
+
+export const CANONICAL_CI_RUNS: ReadonlySet<string> = new Set([
+  './scripts/ci-local.ps1 -CI',
+  'pwsh ./scripts/ci-local.ps1 -CI',
+  'pwsh -File ./scripts/ci-local.ps1 -CI',
+]);
+
+export const EXACT_STEP_ALLOWLIST: ReadonlyMap<string, string> = new Map([
+  ['verify/Install dependencies', 'npm ci'],
+  ['verify/Install Playwright browsers', 'npx playwright install chromium --only-shell'],
+]);
+
+export function validateWorkflowContent(
+  yamlContent: string,
+  fileName = 'workflow.yml'
+): string[] {
+  const errors: string[] = [];
+
+  const doc = parseDocument(yamlContent);
+  if (doc.errors.length > 0) {
+    return doc.errors.map(
+      (e) => `${fileName}: YAML parse error at line ${e.linePos?.[0]?.line ?? '?'}: ${e.message}`
+    );
+  }
+
+  const data = doc.toJS() as Record<string, unknown> | null;
+  if (!data || typeof data !== 'object') {
+    return [`${fileName}: workflow file is empty or not a valid YAML object.`];
+  }
+
+  // 1. Root permissions check
+  const permissions = data.permissions as Record<string, unknown> | string | undefined;
+  if (!permissions) {
+    errors.push(
+      `${fileName}: root permissions block is required and must enforce least-privilege (contents: read).`
+    );
+  } else if (permissions === 'write-all') {
+    errors.push(`${fileName}: root permissions: write-all is forbidden.`);
+  } else if (typeof permissions === 'string') {
+    if (permissions !== 'read-all') {
+      errors.push(
+        `${fileName}: root permissions string '${permissions}' is not allowed; must be { contents: read } or read-all.`
+      );
+    }
+  } else if (typeof permissions === 'object' && !Array.isArray(permissions)) {
+    if (permissions.contents !== 'read') {
+      errors.push(
+        `${fileName}: root permissions must specify 'contents: read'. Found: ${JSON.stringify(permissions.contents)}.`
+      );
+    }
+    for (const [scope, level] of Object.entries(permissions)) {
+      if (level === 'write') {
+        errors.push(
+          `${fileName}: root permissions must not grant write privileges. Found '${scope}: write'. Use job-level permissions instead.`
+        );
+      }
+    }
+  } else {
+    errors.push(`${fileName}: root permissions must be a mapping { contents: read }.`);
+  }
+
+  // 2. Jobs check
+  const jobs = data.jobs as Record<string, unknown> | undefined;
+  if (!jobs || typeof jobs !== 'object') {
+    errors.push(`${fileName}: workflow must define a 'jobs' object.`);
+    return errors;
+  }
+
+  const isCiWorkflow =
+    fileName.endsWith('ci.yml') ||
+    fileName.endsWith('ci.yaml') ||
+    data.name === 'CI';
+
+  // 3. Concurrency check for CI
+  if (isCiWorkflow) {
+    const concurrency = data.concurrency as Record<string, unknown> | string | undefined;
+    if (!concurrency) {
+      errors.push(
+        `${fileName}: CI workflow must define caller-isolated concurrency: group: \${{ github.workflow }}-\${{ github.ref }}.`
+      );
+    } else {
+      const groupStr =
+        typeof concurrency === 'string'
+          ? concurrency
+          : typeof concurrency.group === 'string'
+            ? concurrency.group
+            : '';
+      if (!groupStr.includes('github.workflow') || !groupStr.includes('github.ref')) {
+        errors.push(
+          `${fileName}: CI concurrency group must be caller-isolated containing \${{ github.workflow }}-\${{ github.ref }}. Found: '${groupStr}'.`
+        );
+      }
+
+      const cancelInProgress =
+        typeof concurrency === 'object' && concurrency !== null
+          ? String(concurrency['cancel-in-progress'] ?? '')
+          : '';
+      const normalizedCancel = cancelInProgress.replace(/\s+/g, ' ').trim();
+      if (
+        normalizedCancel !== "${{ github.workflow == 'CI' }}" &&
+        normalizedCancel !== '${{ github.workflow == "CI" }}'
+      ) {
+        errors.push(
+          `${fileName}: CI concurrency must specify caller-isolated 'cancel-in-progress: \${{ github.workflow == \\'CI\\' }}'. Found: '${cancelInProgress}'.`
+        );
+      }
+    }
+  }
+
+  // Inspect each job
+  for (const [jobId, jobRaw] of Object.entries(jobs)) {
+    const job = jobRaw as Record<string, unknown>;
+    if (!job || typeof job !== 'object') {
+      continue;
+    }
+
+    const jobPerms = job.permissions;
+    if (jobPerms === undefined || jobPerms === null) {
+      errors.push(
+        `${fileName}: job '${jobId}' must declare explicit job-level permissions (least-privilege, e.g. 'permissions: { contents: read }').`
+      );
+    } else if (jobPerms === 'write-all') {
+      errors.push(`${fileName}: job '${jobId}' specifies 'permissions: write-all' which is forbidden.`);
+    } else if (typeof jobPerms === 'string') {
+      if (jobPerms !== 'read-all') {
+        errors.push(
+          `${fileName}: job '${jobId}' specifies invalid permissions string '${jobPerms}'; must be a mapping (e.g. { contents: read }) or 'read-all'.`
+        );
+      }
+    } else if (typeof jobPerms === 'object' && !Array.isArray(jobPerms)) {
+      const permsObj = jobPerms as Record<string, unknown>;
+      if (
+        isCiWorkflow &&
+        (jobId === 'verify' || jobId === 'test-and-build') &&
+        permsObj.contents !== 'read'
+      ) {
+        errors.push(
+          `${fileName}: job '${jobId}' must specify 'permissions: { contents: read }'. Found: ${JSON.stringify(jobPerms)}.`
+        );
+      }
+      for (const [scope, level] of Object.entries(permsObj)) {
+        if (level === 'write') {
+          if (jobId === 'security' && scope === 'security-events') {
+            continue;
+          }
+          if (jobId === 'deploy' && (scope === 'pages' || scope === 'id-token')) {
+            continue;
+          }
+          errors.push(
+            `${fileName}: job '${jobId}' requests elevated write privilege '${scope}: write' violating least-privilege.`
+          );
+        }
+      }
+    } else {
+      errors.push(
+        `${fileName}: job '${jobId}' permissions must be a mapping (e.g. { contents: read }) or 'read-all'. Found: ${JSON.stringify(jobPerms)}.`
+      );
+    }
+
+    const steps = job.steps;
+    if (!Array.isArray(steps)) {
+      if (!job.uses) {
+        errors.push(`${fileName}: job '${jobId}' has no steps.`);
+      }
+      continue;
+    }
+
+    const timeoutMinutes = job['timeout-minutes'];
+    if (timeoutMinutes === undefined || timeoutMinutes === null) {
+      errors.push(
+        `${fileName}: job '${jobId}' must specify 'timeout-minutes' (must be a positive integer <= 30).`
+      );
+    } else if (
+      typeof timeoutMinutes !== 'number' ||
+      !Number.isInteger(timeoutMinutes) ||
+      timeoutMinutes <= 0 ||
+      timeoutMinutes > 30
+    ) {
+      errors.push(
+        `${fileName}: job '${jobId}' specifies invalid 'timeout-minutes: ${String(timeoutMinutes)}'. Must be a positive integer <= 30.`
+      );
+    }
+
+    let jobRunsCanonicalCi = false;
+
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i] as Record<string, unknown>;
+      if (!step || typeof step !== 'object') {
+        continue;
+      }
+
+      const stepName = typeof step.name === 'string' && step.name ? step.name : `step[${i}]`;
+
+      if (typeof step.uses === 'string') {
+        const rawUses = step.uses.trim();
+        const usesTarget = rawUses.split('#')[0].trim();
+
+        if (
+          !usesTarget.startsWith('./') &&
+          !usesTarget.startsWith('../') &&
+          !usesTarget.startsWith('docker://')
+        ) {
+          const atIdx = usesTarget.lastIndexOf('@');
+          if (atIdx === -1) {
+            errors.push(
+              `${fileName}: job '${jobId}' step '${stepName}' uses action '${usesTarget}' without ref/SHA.`
+            );
+          } else {
+            const ref = usesTarget.slice(atIdx + 1);
+            if (!/^[0-9a-fA-F]{40}$/.test(ref)) {
+              errors.push(
+                `${fileName}: job '${jobId}' step '${stepName}' uses unpinned action '${usesTarget}'. Remote actions must be pinned to a 40-character commit SHA.`
+              );
+            }
+          }
+        }
+
+        if (usesTarget.startsWith('actions/checkout@')) {
+          const withObj = step.with as Record<string, unknown> | undefined;
+          const persistCreds = withObj?.['persist-credentials'];
+          if (persistCreds !== false && persistCreds !== 'false') {
+            errors.push(
+              `${fileName}: job '${jobId}' checkout step '${stepName}' must explicitly set 'with.persist-credentials: false'.`
+            );
+          }
+        }
+      }
+
+      if (typeof step.run === 'string') {
+        const runStr = step.run;
+        const matches = runStr.match(/\$\{\{[\s\S]*?\}\}/g);
+        if (matches && matches.length > 0) {
+          errors.push(
+            `${fileName}: job '${jobId}' step '${stepName}' contains unescaped expression(s) ${matches.map((m) => `'${m}'`).join(', ')} in 'run:'. Map expressions to 'env:' variables instead.`
+          );
+        }
+
+        const trimmedRun = runStr.trim();
+        const isCanonicalCi = CANONICAL_CI_RUNS.has(trimmedRun);
+        if (isCanonicalCi) {
+          jobRunsCanonicalCi = true;
+        }
+
+        if (isCiWorkflow && (jobId === 'verify' || jobId === 'test-and-build')) {
+          const pairKey = `${jobId}/${stepName}`;
+          const allowlistedCmd = EXACT_STEP_ALLOWLIST.get(pairKey);
+          const isAllowlisted = allowlistedCmd !== undefined && trimmedRun === allowlistedCmd;
+
+          if (!isCanonicalCi && !isAllowlisted) {
+            errors.push(
+              `${fileName}: job '${jobId}' step '${stepName}' runs script ('${trimmedRun}') instead of canonical './scripts/ci-local.ps1 -CI' and pair '${pairKey}' is not in the exact step allowlist.`
+            );
+          }
+        }
+      }
+    }
+
+    if (isCiWorkflow && (jobId === 'verify' || jobId === 'test-and-build')) {
+      if (!jobRunsCanonicalCi) {
+        errors.push(
+          `${fileName}: verify job '${jobId}' defines steps but does not invoke canonical './scripts/ci-local.ps1 -CI'.`
+        );
+      }
+    }
+  }
+
+  if (isCiWorkflow) {
+    const secJob = jobs.security as Record<string, unknown> | undefined;
+    if (!secJob) {
+      errors.push(
+        `${fileName}: must define a dedicated 'security' job running gitleaks and zizmor.`
+      );
+    } else {
+      const secSteps = Array.isArray(secJob.steps) ? (secJob.steps as Array<Record<string, unknown>>) : [];
+      const hasGitleaks = secSteps.some(
+        (s) => typeof s?.uses === 'string' && s.uses.includes('gitleaks/gitleaks-action@')
+      );
+      const hasZizmor = secSteps.some(
+        (s) => typeof s?.uses === 'string' && s.uses.includes('zizmorcore/zizmor-action@')
+      );
+
+      if (!hasGitleaks) {
+        errors.push(
+          `${fileName}: 'security' job must include a step running 'gitleaks/gitleaks-action'.`
+        );
+      }
+      if (!hasZizmor) {
+        errors.push(
+          `${fileName}: 'security' job must include a step running 'zizmorcore/zizmor-action'.`
+        );
+      }
+    }
+
+    const notifyJob = jobs.notify as Record<string, unknown> | undefined;
+    if (!notifyJob) {
+      errors.push(
+        `${fileName}: must define a dedicated 'notify' job for Discord CI notifications.`
+      );
+    } else {
+      const needs = notifyJob.needs;
+      const needsArr = Array.isArray(needs)
+        ? needs.map(String)
+        : typeof needs === 'string'
+          ? [needs]
+          : [];
+      const requiredNeeds = jobs.deploy ? ['security', 'verify', 'deploy'] : ['security', 'verify'];
+      const missingNeeds = requiredNeeds.filter((n) => !needsArr.includes(n));
+      if (missingNeeds.length > 0) {
+        errors.push(
+          `${fileName}: 'notify' job must declare 'needs: [${requiredNeeds.join(', ')}]'. Found: ${JSON.stringify(needs)}.`
+        );
+      }
+
+      const ifCond = String(notifyJob.if || '');
+      if (!ifCond.includes('always()')) {
+        errors.push(
+          `${fileName}: 'notify' job must run on condition 'always()'. Found: '${ifCond}'.`
+        );
+      }
+
+      const envStr = JSON.stringify(notifyJob.env || {});
+      const stepsStr = JSON.stringify(notifyJob.steps || []);
+      if (!envStr.includes('DISCORD_CI_WEBHOOK') && !stepsStr.includes('DISCORD_CI_WEBHOOK')) {
+        errors.push(
+          `${fileName}: 'notify' job must reference 'DISCORD_CI_WEBHOOK' for alert dispatching.`
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
+export function validateWorkflowFile(filePath: string): string[] {
+  if (!fs.existsSync(filePath)) {
+    return [`Workflow file not found: ${filePath}`];
+  }
+  const content = fs.readFileSync(filePath, 'utf8');
+  return validateWorkflowContent(content, path.basename(filePath));
+}
+
+export function runWorkflowContractGate(workflowsDir: string): WorkflowContractResult {
+  if (!fs.existsSync(workflowsDir)) {
+    return {
+      ok: false,
+      errors: [`Workflows directory not found: ${workflowsDir}`],
+    };
+  }
+
+  const entries = fs.readdirSync(workflowsDir);
+  const wfFiles = entries.filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
+
+  if (wfFiles.length === 0) {
+    return {
+      ok: false,
+      errors: [`No workflow files (*.yml, *.yaml) found in ${workflowsDir}`],
+    };
+  }
+
+  const errors: string[] = [];
+  for (const wf of wfFiles) {
+    const fullPath = path.join(workflowsDir, wf);
+    const fileErrors = validateWorkflowFile(fullPath);
+    errors.push(...fileErrors);
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+  };
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  const targetDir = process.argv[2] || path.join(process.cwd(), '.github/workflows');
+  const result = runWorkflowContractGate(targetDir);
+
+  if (!result.ok) {
+    console.error('Workflow Contract Gate FAILED:');
+    for (const err of result.errors) {
+      console.error(`  - ${err}`);
+    }
+    process.exit(1);
+  }
+
+  console.log('Workflow Contract Gate PASSED: all workflows satisfy AST contract.');
+}

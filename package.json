@@ -12,6 +12,7 @@
     "start": "astro dev",
     "build": "astro build",
     "check": "astro check",
+    "test": "node --test --experimental-strip-types tests/**/*.test.ts",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -22,6 +23,10 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",
-    "typescript": "5.9.3"
+    "@types/node": "26.6.6",
+    "axe-core": "4.14.0",
+    "playwright": "1.65.0",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
   }
 }

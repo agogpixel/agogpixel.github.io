@@ -272,6 +272,132 @@ body.ap-app {
   color: var(--ap-secondary);
 }
 
+.ap-main--scrollable .ap-hero {
+  flex: 0 0 auto;
+  padding-block: 2.5rem var(--ap-spacing-lg);
+}
+
+/* Storefront Game Catalog */
+.ap-catalog {
+  width: 100%;
+  max-width: var(--ap-container-max);
+  margin-inline: auto;
+  padding: 0 var(--ap-spacing) 3rem;
+}
+
+.ap-catalog-header {
+  margin-bottom: var(--ap-spacing);
+  padding-bottom: 0.5rem;
+  border-bottom: var(--ap-border);
+}
+
+.ap-catalog-heading {
+  margin: 0;
+  font-family: var(--ap-font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ap-secondary);
+}
+
+.ap-catalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ap-spacing-lg);
+}
+
+.ap-game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: var(--ap-spacing);
+  border: var(--ap-border);
+  border-radius: var(--ap-border-radius);
+  background-color: var(--ap-surface);
+}
+
+.ap-game-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ap-game-card-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.5vw + 1rem, 1.625rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--ap-color);
+}
+
+.ap-game-card-description {
+  margin: 0;
+  max-width: var(--ap-measure);
+  color: var(--ap-muted-color);
+}
+
+.ap-game-embeds {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ap-spacing);
+}
+
+.ap-embed-slot {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ap-embed-frame {
+  display: block;
+  max-width: 100%;
+  border: 0;
+  border-radius: var(--ap-border-radius);
+  background-color: var(--ap-surface-subtle);
+}
+
+.ap-game-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem var(--ap-spacing);
+}
+
+.ap-game-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.375rem 0.75rem;
+  border: var(--ap-border);
+  border-radius: var(--ap-border-radius);
+  background-color: var(--ap-surface-subtle);
+  font-family: var(--ap-font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ap-primary);
+  text-decoration: none;
+  transition: color var(--ap-transition), border-color var(--ap-transition), background-color var(--ap-transition);
+}
+
+.ap-game-link:is(:hover, :focus-visible) {
+  color: var(--ap-primary-hover);
+  border-color: var(--ap-primary);
+  background-color: var(--ap-primary-bg);
+}
+
+@media (min-width: 40rem) {
+  .ap-catalog {
+    padding-inline: 1.5rem;
+  }
+
+  .ap-game-card {
+    padding: 1.5rem;
+  }
+}
+
 /* Prose / Editorial Routes (/credits/, /404.html) */
 .ap-prose {
   width: 100%;

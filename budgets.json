@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Page weight, font asset, client JS, and CLS budgets for agogpixel.com. Thresholds calculated as ceil(measured * 1.25).",
+  "pageBudgets": {
+    "index": {
+      "measuredCompressedBytes": 4310,
+      "maxCompressedBytes": 5388,
+      "description": "Compressed HTML + inlined CSS for / (measured from SITE_FIXTURES=1 build; prod build is 3854 B)"
+    },
+    "credits": {
+      "measuredCompressedBytes": 4226,
+      "maxCompressedBytes": 5283,
+      "description": "Compressed HTML + inlined CSS for /credits/"
+    },
+    "notFound": {
+      "measuredCompressedBytes": 3800,
+      "maxCompressedBytes": 4750,
+      "description": "Compressed HTML + inlined CSS for /404.html"
+    }
+  },
+  "assetBudgets": {
+    "totalWoff2Bytes": {
+      "measuredBytes": 183456,
+      "maxBytes": 229320,
+      "description": "Total uncompressed size of all woff2 font files in dist/fonts/"
+    },
+    "totalJsGzipBytes": {
+      "measuredBytes": 0,
+      "maxBytes": 0,
+      "description": "Total compressed size of client JS bundles in dist/_astro/ (strictly 0)"
+    }
+  },
+  "performanceBudgets": {
+    "maxCls": {
+      "measured": 0,
+      "max": 0.1,
+      "description": "Maximum allowed Cumulative Layout Shift across routes during offline Playwright audit"
+    }
+  }
+}
