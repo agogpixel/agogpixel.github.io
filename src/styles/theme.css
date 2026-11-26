@@ -65,6 +65,43 @@
 }
 
 :root {
+  color-scheme: dark;
+
+  /* Typography */
   --ap-font-sans: 'Inter Variable', 'Inter Fallback', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --ap-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono Fallback', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --ap-line-height: 1.5;
+
+  /* Deep Cosmos Surfaces & Borders */
+  --ap-bg: #030303;
+  --ap-surface: #0a0a0a;
+  --ap-surface-subtle: #141414;
+  --ap-border-hairline: #1f1f1f;
+  --ap-border-subtle: #2b2b2b;
+  --ap-border-muted: #4e4e4e;
+
+  /* Paul Tol Dark-Cosmos Accessible Foreground & Accent Tokens */
+  --ap-color: #eeeeee;
+  --ap-muted-color: #a6a6a6;
+  --ap-primary: #4cc9f0;
+  --ap-primary-hover: #99ddff;
+  --ap-primary-bg: #163a47;
+  --ap-secondary: #f09235;
+  --ap-secondary-border: #c97320;
+  --ap-secondary-bg: #3d240c;
+  --ap-accent-scarlet: #e63946;
+  --ap-alert: #ee5566;
+  --ap-alert-bg: #421419;
+
+  /* Layout & Geometry */
+  --ap-container-max: 64rem;
+  --ap-measure: 72ch;
+  --ap-spacing: 1rem;
+  --ap-spacing-lg: 2rem;
+  --ap-gap-compact: 0.5rem;
+  --ap-border-radius: 0.25rem;
+  --ap-border-width: 0.0625rem;
+  --ap-border: var(--ap-border-width) solid var(--ap-border-subtle);
+  --ap-transition: 0.15s ease-in-out;
+  --ap-z-skip-link: 10000;
 }
