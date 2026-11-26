@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -16,7 +17,12 @@ import { checkLinksAndAnchors } from '../scripts/gates/links.ts';
 import { checkCanonicalAndSitemap } from '../scripts/gates/canonical-sitemap.ts';
 import { checkBudgets, getPageType } from '../scripts/gates/budgets.ts';
 import { validateDiagnosticsLogs } from '../scripts/gates/diagnostics.ts';
-import { isStorefrontWidgetStubUrl, resolveMaxClsBudget, runAxeAudit } from '../scripts/gates/axe.ts';
+import {
+  isStorefrontWidgetStubUrl,
+  resolveMaxClsBudget,
+  runAxeAudit,
+  startDistServer,
+} from '../scripts/gates/axe.ts';
 import { lintColourLiterals, lintSiteCss, lintThemeCss, runCssLints } from '../scripts/gates/css-lint.ts';
 import {
   lintCreditsCompleteness,
@@ -30,6 +36,29 @@ function makeTempDir(t: test.TestContext, prefix: string): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   return dir;
+}
+
+async function sendRawHttpRequest(
+  port: number,
+  rawTarget: string
+): Promise<{ statusCode: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const socket = net.createConnection({ host: '127.0.0.1', port }, () => {
+      socket.write(`GET ${rawTarget} HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nConnection: close\r\n\r\n`);
+    });
+    const chunks: Buffer[] = [];
+    socket.on('data', (chunk) => chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk));
+    socket.on('error', reject);
+    socket.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8');
+      const sepIdx = raw.indexOf('\r\n\r\n');
+      const head = sepIdx === -1 ? raw : raw.slice(0, sepIdx);
+      const body = sepIdx === -1 ? '' : raw.slice(sepIdx + 4);
+      const statusLine = head.split('\r\n')[0] || '';
+      const statusCode = Number.parseInt(statusLine.split(' ')[1] || '0', 10);
+      resolve({ statusCode, body });
+    });
+  });
 }
 
 test('contrast-pairs: passes all --ap-* dark tokens and flags substandard contrast', () => {
@@ -261,6 +290,8 @@ test('ci-local.ps1: passes AST parse and enforces fail-closed -CI flag validatio
     assert.match(content, new RegExp(`["']${key}["']\\s*=`));
   }
 
+  assert.match(content, /Set-StrictMode\s+-Version\s+Latest/);
+
   const pwshCheck = spawnSync('pwsh', ['-NoProfile', '-File', scriptPath, '-CI', '-Quick'], {
     cwd: process.cwd(),
     encoding: 'utf8',
@@ -269,4 +300,120 @@ test('ci-local.ps1: passes AST parse and enforces fail-closed -CI flag validatio
     assert.equal(pwshCheck.status, 1);
     assert.match(`${pwshCheck.stdout}\n${pwshCheck.stderr}`, /CI mode is fail-closed/);
   }
+
+  const ghEnvCheck = spawnSync('pwsh', ['-NoProfile', '-File', scriptPath, '-Quick'], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    env: { ...process.env, GITHUB_ACTIONS: 'true' },
+  });
+  if (!ghEnvCheck.error) {
+    assert.equal(ghEnvCheck.status, 1);
+    assert.match(`${ghEnvCheck.stdout}\n${ghEnvCheck.stderr}`, /CI mode is fail-closed/);
+  }
+});
+
+test('axe server: enforces strict directory jail and rejects path traversal and malformed percent encoding', async (t) => {
+  const rootParent = makeTempDir(t, 'ap-server-jail-');
+  const distDir = path.join(rootParent, 'dist');
+  const siblingDir = path.join(rootParent, 'dist-sibling');
+  fs.mkdirSync(distDir, { recursive: true });
+  fs.mkdirSync(siblingDir, { recursive: true });
+
+  fs.writeFileSync(path.join(rootParent, '.env'), 'SECRET_TOKEN=do-not-leak');
+  fs.writeFileSync(path.join(siblingDir, 'leak.txt'), 'sibling-secret');
+  fs.writeFileSync(path.join(distDir, 'index.html'), '<h1>OK</h1>');
+  fs.writeFileSync(path.join(distDir, 'about.html'), '<h1>About</h1>');
+
+  const { server, port } = await startDistServer(distDir);
+  try {
+    const okRes = await sendRawHttpRequest(port, '/');
+    assert.equal(okRes.statusCode, 200);
+    assert.match(okRes.body, /<h1>OK<\/h1>/);
+
+    const htmlFallbackRes = await sendRawHttpRequest(port, '/about');
+    assert.equal(htmlFallbackRes.statusCode, 200);
+    assert.match(htmlFallbackRes.body, /<h1>About<\/h1>/);
+
+    for (const traversalTarget of [
+      '/../.env',
+      '/..%5c.env',
+      '/%2e%2e/.env',
+      '/../dist-sibling/leak.txt',
+      '/..',
+    ]) {
+      const res = await sendRawHttpRequest(port, traversalTarget);
+      assert.equal(res.statusCode, 403, `Expected 403 for traversal target "${traversalTarget}", got ${res.statusCode}`);
+    }
+
+    for (const badEncodingTarget of ['/%ZZ', '/%E0%A4%A', '/.%00.html']) {
+      const res = await sendRawHttpRequest(port, badEncodingTarget);
+      assert.equal(res.statusCode, 400, `Expected 400 for malformed target "${badEncodingTarget}", got ${res.statusCode}`);
+    }
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+test('zero-js, links, and origins: reject javascript:, vbscript:, and active data: URI payloads', (t) => {
+  const tmpDir = makeTempDir(t, 'ap-xss-schemes-');
+  const prodGrants = buildCatalogIframeAllowlist(getPublishedCatalogGames({}));
+
+  // 1. <a href="javascript:..."> and entity-obfuscated / vbscript: / data:text/html links
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    `<!doctype html><html><body>
+      <a href="javascript:alert(1)">Play</a>
+      <a href="&#106;avascript:alert(2)">Obfuscated</a>
+      <a href="vbscript:msgbox(1)">VB</a>
+      <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgzKTwvc2NyaXB0Pg==">DataHTML</a>
+    </body></html>`
+  );
+
+  const zeroJsLinkRes = checkZeroJs(tmpDir);
+  assert.equal(zeroJsLinkRes.ok, false);
+  assert.equal(zeroJsLinkRes.errors.length, 4);
+  assert.ok(zeroJsLinkRes.errors.some((e) => e.includes('"javascript:"')));
+  assert.ok(zeroJsLinkRes.errors.some((e) => e.includes('"vbscript:"')));
+  assert.ok(zeroJsLinkRes.errors.some((e) => e.includes('"data:text/html"')));
+
+  const linkRes = checkLinksAndAnchors(tmpDir);
+  assert.equal(linkRes.ok, false);
+  assert.equal(linkRes.errors.length, 4);
+  assert.match(linkRes.errors[0], /Forbidden executable URI scheme/);
+
+  // 2. <iframe src="javascript:..."> and <iframe src="data:text/html;base64,...">
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    `<!doctype html><html><body>
+      <iframe src="javascript:alert(1)"></iframe>
+      <iframe src="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="></iframe>
+    </body></html>`
+  );
+
+  const zeroJsIframeRes = checkZeroJs(tmpDir);
+  assert.equal(zeroJsIframeRes.ok, false);
+  assert.equal(zeroJsIframeRes.errors.length, 2);
+  assert.ok(zeroJsIframeRes.errors.some((e) => e.includes('"javascript:"')));
+  assert.ok(zeroJsIframeRes.errors.some((e) => e.includes('"data:text/html"')));
+
+  const originIframeRes = checkOrigins(tmpDir, prodGrants);
+  assert.equal(originIframeRes.ok, false);
+  assert.equal(originIframeRes.errors.length, 2);
+  assert.match(originIframeRes.errors[0], /Forbidden URI scheme/);
+
+  // 3. Direct isNonSameOrigin unit assertions and benign data:image/png allowance
+  assert.deepEqual(isNonSameOrigin('javascript:alert(1)'), { isExternal: true, origin: 'javascript:' });
+  assert.deepEqual(isNonSameOrigin('vbscript:msgbox(1)'), { isExternal: true, origin: 'vbscript:' });
+  assert.deepEqual(isNonSameOrigin('data:text/html,<script>alert(1)</script>'), {
+    isExternal: true,
+    origin: 'data:text/html',
+  });
+  assert.deepEqual(isNonSameOrigin('data:image/png;base64,iVBORw0KGgo='), { isExternal: false });
+
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    '<!doctype html><html><body><img src="data:image/png;base64,iVBORw0KGgo=" alt=""></body></html>'
+  );
+  assert.equal(checkZeroJs(tmpDir).ok, true);
+  assert.equal(checkOrigins(tmpDir, prodGrants).ok, true);
 });

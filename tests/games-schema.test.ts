@@ -16,8 +16,6 @@ import {
   filterPublishedGames,
   gameSchema,
   validateGameCatalog,
-  validateGameSlug,
-  validateGameSlugs,
 } from '../src/lib/games-schema.ts';
 import {
   fixtureGames,
@@ -37,9 +35,23 @@ test('widget dimension and origin constants match storefront embed specs', () =>
   assert.match('escape-from-cygnus-x-1', GAME_SLUG_REGEX);
 });
 
-test('validateGameSlug accepts valid kebab-case slugs and rejects malformed ones', () => {
-  assert.doesNotThrow(() => validateGameSlug('escape-from-cygnus-x-1'));
-  assert.doesNotThrow(() => validateGameSlug('demo-2'));
+test('gameSchema accepts valid kebab-case slugs and rejects malformed or oversized slugs', () => {
+  assert.doesNotThrow(() =>
+    gameSchema.parse({
+      slug: 'escape-from-cygnus-x-1',
+      title: 'Escape From Cygnus X-1',
+      description: 'Valid slug.',
+      draft: true,
+    })
+  );
+  assert.doesNotThrow(() =>
+    gameSchema.parse({
+      slug: 'demo-2',
+      title: 'Demo 2',
+      description: 'Valid alphanumeric slug.',
+      draft: true,
+    })
+  );
 
   const invalid = [
     '',
@@ -54,27 +66,55 @@ test('validateGameSlug accepts valid kebab-case slugs and rejects malformed ones
 
   for (const bad of invalid) {
     assert.throws(
-      () => validateGameSlug(bad, 'Test Game'),
-      /Invalid game slug error/
+      () =>
+        gameSchema.parse({
+          slug: bad,
+          title: 'Test Game',
+          description: 'Invalid slug test.',
+          draft: true,
+        }),
+      (err: unknown) => err instanceof Error && err.name === 'ZodError'
     );
   }
 });
 
-test('validateGameSlugs rejects duplicate slugs across catalog entries', () => {
-  assert.doesNotThrow(() =>
-    validateGameSlugs([
-      { slug: 'escape-from-cygnus-x-1' },
-      { slug: 'second-game' },
-    ])
-  );
+test('validateGameCatalog accepts distinct slugs and rejects duplicate slugs', () => {
+  const valid = validateGameCatalog([
+    {
+      slug: 'escape-from-cygnus-x-1',
+      title: 'Game One',
+      description: 'First.',
+      draft: true,
+    },
+    {
+      slug: 'second-game',
+      title: 'Game Two',
+      description: 'Second.',
+      draft: true,
+    },
+  ]);
+  assert.equal(valid.length, 2);
 
   assert.throws(
     () =>
-      validateGameSlugs([
-        { slug: 'escape-from-cygnus-x-1' },
-        { slug: 'escape-from-cygnus-x-1' },
+      validateGameCatalog([
+        {
+          slug: 'escape-from-cygnus-x-1',
+          title: 'Game One',
+          description: 'First.',
+          draft: true,
+        },
+        {
+          slug: 'escape-from-cygnus-x-1',
+          title: 'Game Two',
+          description: 'Duplicate.',
+          draft: true,
+        },
       ]),
-    /Duplicate game slug error/
+    (err: unknown) =>
+      err instanceof Error &&
+      err.name === 'ZodError' &&
+      err.message.includes("Duplicate game slug 'escape-from-cygnus-x-1'")
   );
 });
 

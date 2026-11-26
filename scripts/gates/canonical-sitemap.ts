@@ -2,40 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { routeFromHtmlPath } from './zero-js.ts';
-
-export const SITE_ORIGIN = 'https://agogpixel.com';
+import { SITE_ORIGIN, parseMetaRefreshRedirect } from './shared.ts';
 
 export interface CanonicalSitemapResult {
   ok: boolean;
   errors: string[];
   pagesChecked: number;
   sitemapUrlsChecked: number;
-}
-
-/**
- * Detects if an HTML document is a meta-refresh redirect stub and extracts its target.
- */
-export function parseMetaRefreshRedirect(content: string): { isRedirect: boolean; target: string | null } {
-  const refreshRegex = /<meta\b[^>]*?\bhttp-equiv\s*=\s*(?:"refresh"|'refresh')[^>]*?\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/i;
-  const reverseRefreshRegex = /<meta\b[^>]*?\bcontent\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*?\bhttp-equiv\s*=\s*(?:"refresh"|'refresh')[^>]*>/i;
-
-  const match = refreshRegex.exec(content) || reverseRefreshRegex.exec(content);
-  if (!match) {
-    return { isRedirect: false, target: null };
-  }
-
-  const contentVal = match[1] ?? match[2] ?? match[3];
-  if (!contentVal) {
-    return { isRedirect: true, target: null };
-  }
-
-  const urlMatch = /url\s*=\s*([^\s;]+)/i.exec(contentVal);
-  if (!urlMatch) {
-    return { isRedirect: true, target: null };
-  }
-
-  const target = urlMatch[1].replace(/['"]/g, '');
-  return { isRedirect: true, target };
 }
 
 export function checkCanonicalAndSitemap(

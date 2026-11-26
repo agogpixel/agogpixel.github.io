@@ -51,7 +51,7 @@ export function validateWorkflowContent(
         `${fileName}: root permissions string '${permissions}' is not allowed; must be { contents: read } or read-all.`
       );
     }
-  } else if (typeof permissions === 'object') {
+  } else if (typeof permissions === 'object' && !Array.isArray(permissions)) {
     if (permissions.contents !== 'read') {
       errors.push(
         `${fileName}: root permissions must specify 'contents: read'. Found: ${JSON.stringify(permissions.contents)}.`
@@ -123,24 +123,31 @@ export function validateWorkflowContent(
       continue;
     }
 
-    const jobPerms = job.permissions as Record<string, unknown> | string | undefined | null;
+    const jobPerms = job.permissions;
     if (jobPerms === undefined || jobPerms === null) {
       errors.push(
         `${fileName}: job '${jobId}' must declare explicit job-level permissions (least-privilege, e.g. 'permissions: { contents: read }').`
       );
     } else if (jobPerms === 'write-all') {
       errors.push(`${fileName}: job '${jobId}' specifies 'permissions: write-all' which is forbidden.`);
-    } else if (typeof jobPerms === 'object') {
+    } else if (typeof jobPerms === 'string') {
+      if (jobPerms !== 'read-all') {
+        errors.push(
+          `${fileName}: job '${jobId}' specifies invalid permissions string '${jobPerms}'; must be a mapping (e.g. { contents: read }) or 'read-all'.`
+        );
+      }
+    } else if (typeof jobPerms === 'object' && !Array.isArray(jobPerms)) {
+      const permsObj = jobPerms as Record<string, unknown>;
       if (
         isCiWorkflow &&
         (jobId === 'verify' || jobId === 'test-and-build') &&
-        jobPerms.contents !== 'read'
+        permsObj.contents !== 'read'
       ) {
         errors.push(
           `${fileName}: job '${jobId}' must specify 'permissions: { contents: read }'. Found: ${JSON.stringify(jobPerms)}.`
         );
       }
-      for (const [scope, level] of Object.entries(jobPerms)) {
+      for (const [scope, level] of Object.entries(permsObj)) {
         if (level === 'write') {
           if (jobId === 'security' && scope === 'security-events') {
             continue;
@@ -153,6 +160,10 @@ export function validateWorkflowContent(
           );
         }
       }
+    } else {
+      errors.push(
+        `${fileName}: job '${jobId}' permissions must be a mapping (e.g. { contents: read }) or 'read-all'. Found: ${JSON.stringify(jobPerms)}.`
+      );
     }
 
     const steps = job.steps;
@@ -301,9 +312,11 @@ export function validateWorkflowContent(
         : typeof needs === 'string'
           ? [needs]
           : [];
-      if (!needsArr.includes('security') || !needsArr.includes('verify')) {
+      const requiredNeeds = jobs.deploy ? ['security', 'verify', 'deploy'] : ['security', 'verify'];
+      const missingNeeds = requiredNeeds.filter((n) => !needsArr.includes(n));
+      if (missingNeeds.length > 0) {
         errors.push(
-          `${fileName}: 'notify' job must declare 'needs: [security, verify]'. Found: ${JSON.stringify(needs)}.`
+          `${fileName}: 'notify' job must declare 'needs: [${requiredNeeds.join(', ')}]'. Found: ${JSON.stringify(needs)}.`
         );
       }
 

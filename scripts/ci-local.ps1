@@ -30,6 +30,7 @@ param(
     [string]$WorkflowsPath = ""
 )
 
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RootDir = Split-Path -Parent $ScriptDir
@@ -82,8 +83,8 @@ function Write-GateSummary {
     }
 }
 
-# Fail-closed guard for -CI mode: reject skip or partial flags immediately
-if ($CI) {
+# Fail-closed guard for CI mode: reject skip or partial flags immediately
+if ($IsCI) {
     $rejectedFlags = @()
     if ($Quick) { $rejectedFlags += "-Quick" }
     if ($Gate0Only) { $rejectedFlags += "-Gate0Only" }
@@ -102,7 +103,7 @@ if ($CI) {
     )
     foreach ($tool in $requiredTools) {
         if (-not (Get-Command $tool.Name -ErrorAction SilentlyContinue)) {
-            Write-Fail "-CI mode requires '$($tool.Name)' in PATH, but it was not found. $($tool.Hint)"
+            Write-Fail "CI mode requires '$($tool.Name)' in PATH, but it was not found. $($tool.Hint)"
             exit 1
         }
     }
@@ -111,7 +112,7 @@ if ($CI) {
 if (-not $BaseRef) {
     $mergeBase = & git -C $RootDir merge-base HEAD origin/main 2>$null
     if ($LASTEXITCODE -eq 0 -and $mergeBase) {
-        $BaseRef = $mergeBase.Trim()
+        $BaseRef = ($mergeBase | Out-String).Trim()
     } else {
         $BaseRef = "origin/main"
     }
@@ -168,10 +169,10 @@ try {
     Enter-Gate 1 $MaxGate "Action Commit SHA Pinning & Agent File Leak Audit"
     $wfDir = if ($WorkflowsPath) { $WorkflowsPath } else { Join-Path $RootDir ".github/workflows" }
     if (Test-Path $wfDir) {
-        $wfFiles = Get-ChildItem -Path $wfDir -File | Where-Object { $_.Extension -in @(".yml", ".yaml") }
+        $wfFiles = @(Get-ChildItem -Path $wfDir -File | Where-Object { $_.Extension -in @(".yml", ".yaml") })
         $unpinned = @()
         foreach ($wf in $wfFiles) {
-            $lines = Get-Content $wf.FullName
+            $lines = @(Get-Content $wf.FullName)
             for ($i = 0; $i -lt $lines.Count; $i++) {
                 $line = $lines[$i]
                 if ($line -match '^\s*(?:-\s+)?uses:\s*[''"]?([^''"\s#]+)[''"]?') {
@@ -191,9 +192,9 @@ try {
     }
 
     $LeakPattern = '^(\.agents?/|\.gemini/|\.ai/|\.cursor/|\.claude/|scratch/|docs/learnings/|AGENTS\.md$|GEMINI\.md$|CLAUDE\.md$)'
-    $TrackedFiles = & git -C $RootDir ls-files
+    $TrackedFiles = @(& git -C $RootDir ls-files)
     $TrackedLeaks = @($TrackedFiles | Where-Object { $_ -match $LeakPattern })
-    $UntrackedFiles = & git -C $RootDir ls-files --others --exclude-standard
+    $UntrackedFiles = @(& git -C $RootDir ls-files --others --exclude-standard)
     $UntrackedLeaks = @($UntrackedFiles | Where-Object { $_ -match $LeakPattern })
 
     if ($TrackedLeaks.Count -gt 0 -or $UntrackedLeaks.Count -gt 0) {
@@ -208,13 +209,13 @@ try {
     # -------------------------------------------------------------
     $Gate2Timer = [System.Diagnostics.Stopwatch]::StartNew()
     Enter-Gate 2 $MaxGate "PowerShell AST Parse Validation (*.ps1)"
-    $Ps1Files = Get-ChildItem -Path $RootDir -Recurse -Filter "*.ps1" | Where-Object { $_.FullName -notmatch '[\\/](\.git|node_modules)[\\/]' }
+    $Ps1Files = @(Get-ChildItem -Path $RootDir -Recurse -Filter "*.ps1" | Where-Object { $_.FullName -notmatch '[\\/](\.git|node_modules)[\\/]' })
     $ParseErrors = 0
     foreach ($ps in $Ps1Files) {
         $tokens = $null
         $errors = $null
         [System.Management.Automation.Language.Parser]::ParseFile($ps.FullName, [ref]$tokens, [ref]$errors) | Out-Null
-        if ($errors.Count -gt 0) {
+        if (@($errors).Count -gt 0) {
             Write-Fail "Parse error in $($ps.FullName): $($errors | Out-String)"
             $ParseErrors++
         }

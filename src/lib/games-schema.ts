@@ -11,35 +11,6 @@ export const ITCH_EMBED_HEIGHT = 167;
 export const STEAM_WIDGET_WIDTH = 646;
 export const STEAM_WIDGET_HEIGHT = 190;
 
-/**
- * Validates that a game slug conforms to kebab-case grammar and max length.
- */
-export function validateGameSlug(slug: string, entryTitle?: string): void {
-  const label = entryTitle ?? slug;
-
-  if (!slug || slug.length > MAX_GAME_SLUG_LENGTH || !GAME_SLUG_REGEX.test(slug)) {
-    throw new Error(
-      `Invalid game slug error: Game '${label}' has slug '${slug}' which must be 1..${MAX_GAME_SLUG_LENGTH} chars matching ^[a-z0-9]+(-[a-z0-9]+)*$.`
-    );
-  }
-}
-
-/**
- * Validates slug grammar and uniqueness across a collection of game entries.
- */
-export function validateGameSlugs<T extends { slug: string; title?: string }>(
-  entries: readonly T[]
-): void {
-  const seen = new Set<string>();
-  for (const entry of entries) {
-    validateGameSlug(entry.slug, entry.title);
-    if (seen.has(entry.slug)) {
-      throw new Error(`Duplicate game slug error: '${entry.slug}' appears more than once.`);
-    }
-    seen.add(entry.slug);
-  }
-}
-
 export const positiveIntIdSchema = z
   .number({ message: 'Storefront ID must be a positive integer' })
   .int('Storefront ID must be an integer')

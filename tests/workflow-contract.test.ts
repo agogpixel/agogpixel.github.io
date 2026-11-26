@@ -79,7 +79,7 @@ jobs:
       - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
   notify:
     name: Notify
-    needs: [security, verify]
+    needs: [security, verify, deploy]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -126,4 +126,64 @@ jobs:
   assert.ok(errors.some((e) => e.includes('not in the exact step allowlist')));
   assert.ok(errors.some((e) => e.includes("dedicated 'security' job")));
   assert.ok(errors.some((e) => e.includes("dedicated 'notify' job")));
+});
+
+test('workflow-contract: rejects invalid job permissions types and notify omitting deploy', () => {
+  const invalidJobPermsAndNotifyYaml = `
+name: CI
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: \${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: \${{ github.workflow == 'CI' }}
+jobs:
+  security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions: []
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+      - uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Run CI Orchestrator
+        run: ./scripts/ci-local.ps1 -CI
+  deploy:
+    needs: [security, verify]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions: "bogus"
+    steps:
+      - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+  notify:
+    needs: [security, verify]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions: 123
+    env:
+      WEBHOOK_URL: \${{ secrets.DISCORD_CI_WEBHOOK }}
+    steps:
+      - name: Dispatch card
+        run: echo "Sending notification"
+`;
+
+  const errors = validateWorkflowContent(invalidJobPermsAndNotifyYaml, 'ci.yml');
+  assert.ok(errors.some((e) => e.includes("job 'security' permissions must be a mapping")));
+  assert.ok(errors.some((e) => e.includes("job 'deploy' specifies invalid permissions string 'bogus'")));
+  assert.ok(errors.some((e) => e.includes("job 'notify' permissions must be a mapping")));
+  assert.ok(errors.some((e) => e.includes("'notify' job must declare 'needs: [security, verify, deploy]'")));
 });

@@ -120,7 +120,7 @@ jobs:
 
   notify:
     name: Discord CI Notification
-    needs: [security, verify]
+    needs: [security, verify, deploy]
     if: always() && github.event_name != 'workflow_call' && github.workflow == 'CI'
     runs-on: ubuntu-24.04
     timeout-minutes: 15

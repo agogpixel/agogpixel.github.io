@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { detectForbiddenUriScheme } from './shared.ts';
 
 export interface ZeroJsResult {
   ok: boolean;
@@ -64,10 +65,40 @@ export function checkZeroJs(
           const route = routeFromHtmlPath(relPath);
           const content = fs.readFileSync(fullPath, 'utf8');
 
-          if (/<script\b/i.test(content) && !allowedJsRoutes.has(route)) {
-            errors.push(
-              `Forbidden <script> tag found in HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
-            );
+          if (!allowedJsRoutes.has(route)) {
+            if (/<script\b/i.test(content)) {
+              errors.push(
+                `Forbidden <script> tag found in HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
+              );
+            }
+
+            const htmlWithoutComments = content.replace(/<!--[\s\S]*?-->/g, '');
+            const tagRegex = /<[a-zA-Z][a-zA-Z0-9:-]*\b((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+            let tagMatch: RegExpExecArray | null;
+            while ((tagMatch = tagRegex.exec(htmlWithoutComments)) !== null) {
+              const attrs = tagMatch[1];
+              const attrRegex =
+                /\b(href|src|action|formaction|data|poster|srcset)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
+              let attrMatch: RegExpExecArray | null;
+              while ((attrMatch = attrRegex.exec(attrs)) !== null) {
+                const attrName = attrMatch[1].toLowerCase();
+                const rawVal = attrMatch[2] ?? attrMatch[3] ?? attrMatch[4] ?? '';
+                const candidates =
+                  attrName === 'srcset'
+                    ? rawVal.split(',').map((part) => part.trim().split(/\s+/)[0])
+                    : [rawVal];
+
+                for (const candidate of candidates) {
+                  if (!candidate) continue;
+                  const forbiddenScheme = detectForbiddenUriScheme(candidate);
+                  if (forbiddenScheme) {
+                    errors.push(
+                      `Forbidden executable URI scheme "${forbiddenScheme}" in ${attrName} on HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
+                    );
+                  }
+                }
+              }
+            }
           }
         }
       }

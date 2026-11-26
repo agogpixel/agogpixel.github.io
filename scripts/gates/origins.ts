@@ -10,8 +10,7 @@ import {
 } from '../../src/lib/games-schema.ts';
 import { getPublishedCatalogGames } from '../../src/data/games.ts';
 import { routeFromHtmlPath } from './zero-js.ts';
-
-export const SITE_ORIGIN = 'https://agogpixel.com';
+import { SITE_ORIGIN, decodeHtmlEntities, detectForbiddenUriScheme } from './shared.ts';
 
 export type ResourceKind = 'script' | 'link' | 'media' | 'iframe' | 'inline-style' | 'css';
 
@@ -49,12 +48,17 @@ export function isNonSameOrigin(
 ): { isExternal: boolean; origin?: string } {
   const trimmed = urlStr.trim().replace(/^['"]|['"]$/g, '');
 
+  const forbiddenScheme = detectForbiddenUriScheme(trimmed);
+  if (forbiddenScheme) {
+    return { isExternal: true, origin: forbiddenScheme };
+  }
+
+  const lower = trimmed.toLowerCase();
   if (
     !trimmed ||
     trimmed.startsWith('#') ||
-    trimmed.startsWith('data:') ||
-    trimmed.startsWith('mailto:') ||
-    trimmed.startsWith('javascript:')
+    lower.startsWith('data:') ||
+    lower.startsWith('mailto:')
   ) {
     return { isExternal: false };
   }
@@ -105,15 +109,6 @@ export function scanCssResources(cssContent: string): string[] {
   return urls;
 }
 
-function decodeHtmlAttributeEntities(raw: string): string {
-  return raw
-    .replace(/&amp;/gi, '&')
-    .replace(/&#38;/g, '&')
-    .replace(/&#x26;/gi, '&')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/g, "'");
-}
-
 /**
  * Extracts resource-loading references from HTML (excluding outbound <a href> and <link rel="canonical">).
  */
@@ -125,7 +120,7 @@ export function scanHtmlResources(htmlContent: string): ScannedResource[] {
   let match: RegExpExecArray | null;
   while ((match = scriptRegex.exec(htmlContent)) !== null) {
     const val = match[1] ?? match[2] ?? match[3];
-    if (val) resources.push({ url: decodeHtmlAttributeEntities(val), kind: 'script' });
+    if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'script' });
   }
 
   // 2. <link ... href="..."> (excluding rel="canonical")
@@ -138,7 +133,7 @@ export function scanHtmlResources(htmlContent: string): ScannedResource[] {
     const hrefMatch = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
     if (hrefMatch) {
       const val = hrefMatch[1] ?? hrefMatch[2] ?? hrefMatch[3];
-      if (val) resources.push({ url: decodeHtmlAttributeEntities(val), kind: 'link' });
+      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'link' });
     }
   }
 
@@ -149,7 +144,7 @@ export function scanHtmlResources(htmlContent: string): ScannedResource[] {
     const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
     if (srcMatch) {
       const val = srcMatch[1] ?? srcMatch[2] ?? srcMatch[3];
-      if (val) resources.push({ url: decodeHtmlAttributeEntities(val), kind: 'media' });
+      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'media' });
     }
     const srcsetMatch = /\bsrcset\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
     if (srcsetMatch) {
@@ -157,7 +152,7 @@ export function scanHtmlResources(htmlContent: string): ScannedResource[] {
       if (srcsetVal) {
         const parts = srcsetVal.split(',').map((p) => p.trim().split(/\s+/)[0]);
         for (const p of parts) {
-          if (p) resources.push({ url: decodeHtmlAttributeEntities(p), kind: 'media' });
+          if (p) resources.push({ url: decodeHtmlEntities(p), kind: 'media' });
         }
       }
     }
@@ -167,7 +162,7 @@ export function scanHtmlResources(htmlContent: string): ScannedResource[] {
   const iframeRegex = /<iframe\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi;
   while ((match = iframeRegex.exec(htmlContent)) !== null) {
     const val = match[1] ?? match[2] ?? match[3];
-    if (val) resources.push({ url: decodeHtmlAttributeEntities(val), kind: 'iframe' });
+    if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'iframe' });
   }
 
   // 5. <video> / <audio> ... src and poster
@@ -177,12 +172,12 @@ export function scanHtmlResources(htmlContent: string): ScannedResource[] {
     const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
     if (srcMatch) {
       const val = srcMatch[1] ?? srcMatch[2] ?? srcMatch[3];
-      if (val) resources.push({ url: decodeHtmlAttributeEntities(val), kind: 'media' });
+      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'media' });
     }
     const posterMatch = /\bposter\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
     if (posterMatch) {
       const val = posterMatch[1] ?? posterMatch[2] ?? posterMatch[3];
-      if (val) resources.push({ url: decodeHtmlAttributeEntities(val), kind: 'media' });
+      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'media' });
     }
   }
 
@@ -310,6 +305,14 @@ export function checkOrigins(
 
           for (const res of resources) {
             resourcesChecked++;
+            const forbiddenScheme = detectForbiddenUriScheme(res.url);
+            if (forbiddenScheme) {
+              errors.push(
+                `Forbidden URI scheme "${forbiddenScheme}" in <${res.kind}> resource "${res.url}" on route "${route}" (${relPath}).`
+              );
+              continue;
+            }
+
             const { isExternal, origin } = isNonSameOrigin(res.url, siteOrigin);
             if (!isExternal || !origin) {
               continue;
@@ -335,6 +338,14 @@ export function checkOrigins(
           const urls = scanCssResources(content);
           for (const u of urls) {
             resourcesChecked++;
+            const forbiddenScheme = detectForbiddenUriScheme(u);
+            if (forbiddenScheme) {
+              errors.push(
+                `Forbidden URI scheme "${forbiddenScheme}" in CSS resource "${u}" in file "${relPath}".`
+              );
+              continue;
+            }
+
             const { isExternal, origin } = isNonSameOrigin(u, siteOrigin);
             if (isExternal && origin) {
               errors.push(

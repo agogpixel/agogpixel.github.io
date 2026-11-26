@@ -2,8 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { routeFromHtmlPath } from './zero-js.ts';
-
-export const SITE_ORIGIN = 'https://agogpixel.com';
+import { SITE_ORIGIN, decodeHtmlEntities, detectForbiddenUriScheme } from './shared.ts';
 
 export interface LinkCheckResult {
   ok: boolean;
@@ -41,7 +40,7 @@ export function extractHtmlLinksAndAnchors(htmlContent: string): {
   const aRegex = /<a\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi;
   while ((match = aRegex.exec(htmlContent)) !== null) {
     const href = match[1] ?? match[2] ?? match[3];
-    if (href) links.push(href.trim().replace(/&amp;/gi, '&'));
+    if (href) links.push(decodeHtmlEntities(href).trim());
   }
 
   const ariaRegex = /\b(aria-labelledby|aria-describedby)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
@@ -123,7 +122,15 @@ export function checkLinksAndAnchors(
           }
 
           for (const href of links) {
-            if (/^(mailto:|tel:|javascript:)/i.test(href)) {
+            const forbiddenScheme = detectForbiddenUriScheme(href);
+            if (forbiddenScheme) {
+              errors.push(
+                `Forbidden executable URI scheme "${forbiddenScheme}" in <a href="${href}"> on page "${currentRoute}" (${relPath}).`
+              );
+              continue;
+            }
+
+            if (/^(mailto:|tel:)/i.test(href)) {
               continue;
             }
 

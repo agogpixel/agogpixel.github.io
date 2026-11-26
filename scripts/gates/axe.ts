@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type Browser, type BrowserContext } from 'playwright';
 import axe from 'axe-core';
+import { parseMetaRefreshRedirect } from './shared.ts';
 
 export const DEFAULT_MAX_CLS = 0.1;
 
@@ -129,13 +130,12 @@ export function filePathToRoute(distDir: string, filePath: string): string {
   return '/' + rel;
 }
 
-export function isRedirectHtml(htmlContent: string): boolean {
-  const refreshRegex = /<meta\b[^>]*?\bhttp-equiv\s*=\s*(?:"refresh"|'refresh')[^>]*>/i;
-  const reverseRefreshRegex = /<meta\b[^>]*?\bcontent\s*=[^>]*?\bhttp-equiv\s*=\s*(?:"refresh"|'refresh')[^>]*>/i;
-  return refreshRegex.test(htmlContent) || reverseRefreshRegex.test(htmlContent);
-}
-
 export async function startDistServer(distDir: string): Promise<{ server: http.Server; port: number }> {
+  const rootDir = path.resolve(distDir);
+  const rootPrefix = rootDir.endsWith(path.sep) ? rootDir : rootDir + path.sep;
+  const isInsideRoot = (candidate: string): boolean =>
+    candidate === rootDir || candidate.startsWith(rootPrefix);
+
   const contentTypes: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
@@ -152,24 +152,85 @@ export async function startDistServer(distDir: string): Promise<{ server: http.S
   };
 
   const server = http.createServer((req, res) => {
-    let reqUrl = req.url?.split('?')[0] || '/';
-    if (reqUrl.endsWith('/')) {
-      reqUrl += 'index.html';
-    }
-    let localPath = path.join(distDir, reqUrl);
-    if (!fs.existsSync(localPath) && fs.existsSync(localPath + '.html')) {
-      localPath += '.html';
+    const rawPath = (req.url ?? '/').split('?')[0];
+
+    let decodedPath: string;
+    try {
+      decodedPath = decodeURIComponent(rawPath);
+    } catch {
+      res.statusCode = 400;
+      res.end('Bad Request');
+      return;
     }
 
-    if (!fs.existsSync(localPath) || !fs.statSync(localPath).isFile()) {
+    if (decodedPath.includes('\0')) {
+      res.statusCode = 400;
+      res.end('Bad Request');
+      return;
+    }
+
+    let reqPath = decodedPath.replace(/\\/g, '/');
+    if (!reqPath.startsWith('/')) {
+      res.statusCode = 400;
+      res.end('Bad Request');
+      return;
+    }
+
+    if (reqPath.endsWith('/')) {
+      reqPath += 'index.html';
+    }
+
+    const candidate = path.resolve(rootDir, '.' + reqPath);
+    if (!isInsideRoot(candidate)) {
+      res.statusCode = 403;
+      res.end('Forbidden');
+      return;
+    }
+
+    let localPath = candidate;
+    if (!fs.existsSync(localPath)) {
+      const htmlCandidate = path.resolve(candidate + '.html');
+      if (candidate === rootDir || !isInsideRoot(htmlCandidate)) {
+        res.statusCode = 403;
+        res.end('Forbidden');
+        return;
+      }
+      localPath = htmlCandidate;
+    }
+
+    if (!fs.existsSync(localPath)) {
       res.statusCode = 404;
       res.end('Not Found');
       return;
     }
 
-    const ext = path.extname(localPath).toLowerCase();
+    let realRootDir: string;
+    let realLocalPath: string;
+    try {
+      realRootDir = fs.realpathSync(rootDir);
+      realLocalPath = fs.realpathSync(localPath);
+    } catch {
+      res.statusCode = 404;
+      res.end('Not Found');
+      return;
+    }
+
+    const realRootPrefix = realRootDir.endsWith(path.sep) ? realRootDir : realRootDir + path.sep;
+    if (realLocalPath !== realRootDir && !realLocalPath.startsWith(realRootPrefix)) {
+      res.statusCode = 403;
+      res.end('Forbidden');
+      return;
+    }
+
+    if (!fs.statSync(realLocalPath).isFile()) {
+      res.statusCode = 404;
+      res.end('Not Found');
+      return;
+    }
+
+    const ext = path.extname(realLocalPath).toLowerCase();
     res.setHeader('Content-Type', contentTypes[ext] || 'application/octet-stream');
-    fs.createReadStream(localPath).pipe(res);
+    fs.createReadStream(realLocalPath).pipe(res);
   });
 
   return new Promise((resolve, reject) => {
@@ -287,7 +348,7 @@ export async function runAxeAudit(options: AxeAuditOptions): Promise<AxeAuditRes
 
   const nonRedirectHtmlFiles = htmlFiles.filter((filePath) => {
     const content = fs.readFileSync(filePath, 'utf8');
-    return !isRedirectHtml(content);
+    return !parseMetaRefreshRedirect(content).isRedirect;
   });
 
   const routes = nonRedirectHtmlFiles.map((f) => filePathToRoute(distDir, f)).sort();
