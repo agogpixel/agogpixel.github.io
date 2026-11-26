@@ -7,7 +7,7 @@ The official website for **Agogpixel** ([agogpixel.com](https://agogpixel.com)) 
 - **Static Framework**: [Astro 7](https://astro.build) (`trailingSlash: 'always'`, `build.format: 'directory'`, `inlineStylesheets: 'always'`) generating static HTML with zero client-side JavaScript.
 - **Styling**: Vanilla CSS (`src/styles/theme.css`, `src/styles/site.css`) built on semantic `--ap-*` tokens with a Deep Cosmos (`#030303`) surface and Paul Tol accessible high-contrast accents.
 - **Self-Hosted Typography**: Local variable `.woff2` subsets (`Inter` and `JetBrains Mono`) under `public/fonts/` with metric-matched fallback `@font-face` declarations and SIL OFL 1.1 attribution at `/credits/` (`public/credits/OFL.txt`).
-- **CI & Deployment**: GitHub Actions (`.github/workflows/ci.yml`) running Gitleaks/zizmor security audits, the 7-gate `scripts/ci-local.ps1` verification suite, GitHub Pages deployment, and Discord CI notifications.
+- **CI & Deployment**: GitHub Actions (`.github/workflows/ci.yml`) running zizmor workflow security audits, the 7-gate `scripts/ci-local.ps1` verification suite, GitHub Pages deployment, and Discord CI notifications.
 
 ## Quick Start
 

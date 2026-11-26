@@ -277,22 +277,14 @@ export function validateWorkflowContent(
     const secJob = jobs.security as Record<string, unknown> | undefined;
     if (!secJob) {
       errors.push(
-        `${fileName}: must define a dedicated 'security' job running gitleaks and zizmor.`
+        `${fileName}: must define a dedicated 'security' job running zizmor.`
       );
     } else {
       const secSteps = Array.isArray(secJob.steps) ? (secJob.steps as Array<Record<string, unknown>>) : [];
-      const hasGitleaks = secSteps.some(
-        (s) => typeof s?.uses === 'string' && s.uses.includes('gitleaks/gitleaks-action@')
-      );
       const hasZizmor = secSteps.some(
         (s) => typeof s?.uses === 'string' && s.uses.includes('zizmorcore/zizmor-action@')
       );
 
-      if (!hasGitleaks) {
-        errors.push(
-          `${fileName}: 'security' job must include a step running 'gitleaks/gitleaks-action'.`
-        );
-      }
       if (!hasZizmor) {
         errors.push(
           `${fileName}: 'security' job must include a step running 'zizmorcore/zizmor-action'.`
