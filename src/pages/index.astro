@@ -1,10 +1,16 @@
 ---
+import GameEmbedCard from '../components/GameEmbedCard.astro';
+import { getPublishedCatalogGames } from '../data/games';
 import Layout from '../layouts/Layout.astro';
+
+const publishedGames = getPublishedCatalogGames();
+const hasPublishedGames = publishedGames.length > 0;
 ---
 
 <Layout
   title="Agogpixel | Curious Software Development"
   description="An A- Studio. Curious Software Development."
+  scrollable={hasPublishedGames}
 >
   <section class="ap-hero" aria-labelledby="hero-title">
     <div class="ap-hero-inner">
@@ -32,4 +38,17 @@ import Layout from '../layouts/Layout.astro';
       </hgroup>
     </div>
   </section>
+
+  {hasPublishedGames && (
+    <section class="ap-catalog" aria-labelledby="catalog-heading">
+      <header class="ap-catalog-header">
+        <h2 id="catalog-heading" class="ap-catalog-heading">Games</h2>
+      </header>
+      <div class="ap-catalog-list">
+        {publishedGames.map((game) => (
+          <GameEmbedCard game={game} />
+        ))}
+      </div>
+    </section>
+  )}
 </Layout>
