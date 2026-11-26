@@ -1,0 +1,89 @@
+---
+import {
+  ITCH_EMBED_HEIGHT,
+  ITCH_EMBED_WIDTH,
+  STEAM_WIDGET_HEIGHT,
+  STEAM_WIDGET_WIDTH,
+  buildItchEmbedUrl,
+  buildSteamStoreUrl,
+  buildSteamWidgetUrl,
+  type GameCatalogEntry,
+} from '../lib/games-schema';
+
+export interface Props {
+  game: GameCatalogEntry;
+}
+
+const { game } = Astro.props;
+
+const cardTitleId = `game-${game.slug}-title`;
+const itchEmbedUrl =
+  game.itchEmbedId !== undefined ? buildItchEmbedUrl(game.itchEmbedId) : undefined;
+const steamWidgetUrl =
+  game.steamAppId !== undefined ? buildSteamWidgetUrl(game.steamAppId) : undefined;
+const steamStoreUrl =
+  game.steamAppId !== undefined ? buildSteamStoreUrl(game.steamAppId) : undefined;
+const hasExternalLinks = game.itchUrl !== undefined || steamStoreUrl !== undefined;
+---
+
+<article class="ap-game-card" id={`game-${game.slug}`} aria-labelledby={cardTitleId}>
+  <header class="ap-game-card-header">
+    <h3 id={cardTitleId} class="ap-game-card-title">{game.title}</h3>
+    <p class="ap-game-card-description">{game.description}</p>
+  </header>
+
+  {(itchEmbedUrl !== undefined || steamWidgetUrl !== undefined) && (
+    <div class="ap-game-embeds">
+      {itchEmbedUrl !== undefined && (
+        <div class="ap-embed-slot ap-embed-slot--itch">
+          <iframe
+            class="ap-embed-frame ap-embed-frame--itch"
+            src={itchEmbedUrl}
+            width={ITCH_EMBED_WIDTH}
+            height={ITCH_EMBED_HEIGHT}
+            loading="lazy"
+            title={`${game.title} on itch.io`}
+          ></iframe>
+        </div>
+      )}
+
+      {steamWidgetUrl !== undefined && (
+        <div class="ap-embed-slot ap-embed-slot--steam">
+          <iframe
+            class="ap-embed-frame ap-embed-frame--steam"
+            src={steamWidgetUrl}
+            width={STEAM_WIDGET_WIDTH}
+            height={STEAM_WIDGET_HEIGHT}
+            loading="lazy"
+            title={`${game.title} on Steam`}
+          ></iframe>
+        </div>
+      )}
+    </div>
+  )}
+
+  {hasExternalLinks && (
+    <div class="ap-game-links">
+      {game.itchUrl !== undefined && (
+        <a
+          href={game.itchUrl}
+          class="ap-game-link"
+          rel="external noopener noreferrer"
+          aria-label={`View on itch.io — ${game.title}`}
+        >
+          View on itch.io
+        </a>
+      )}
+      {steamStoreUrl !== undefined && (
+        <a
+          href={steamStoreUrl}
+          class="ap-game-link"
+          rel="external noopener noreferrer"
+          aria-label={`View on Steam — ${game.title}`}
+        >
+          View on Steam
+        </a>
+      )}
+    </div>
+  )}
+</article>

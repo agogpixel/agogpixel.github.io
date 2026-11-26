@@ -1,12 +1,14 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import '../styles/global.css';
+import '../styles/theme.css';
+import '../styles/site.css';
 
 export interface Props {
   title?: string;
   description?: string;
   image?: string;
+  noindex?: boolean;
   scrollable?: boolean;
 }
 
@@ -14,25 +16,42 @@ const {
   title = 'Agogpixel | Curious Software Development',
   description = 'An A- Studio. Curious Software Development.',
   image = '/assets/rocket_guinea_pig.png',
+  noindex = false,
   scrollable = false,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://agogpixel.com');
+let pathname = Astro.url.pathname;
+if (!pathname.endsWith('/')) {
+  pathname += '/';
+}
+const siteBase = Astro.site ?? 'https://agogpixel.com';
+const canonicalURL = new URL(pathname, siteBase);
+const ogImageURL = new URL(image, siteBase);
 ---
 
 <!doctype html>
-<html lang="en" class="dark h-full">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; manifest-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src https://itch.io https://store.steampowered.com"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
     <title>{title}</title>
+
+    {!noindex && <link rel="canonical" href={canonicalURL.href} />}
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Preload primary roman woff2 font (same origin, crossorigin) -->
     <link
-      rel="alternate"
-      type="application/rss+xml"
-      title="Agogpixel Devlogs RSS Feed"
-      href={new URL('rss.xml', Astro.site || 'https://agogpixel.com')}
+      rel="preload"
+      href="/fonts/inter-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
 
     <!-- Favicons -->
@@ -45,32 +64,25 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://agogpixe
 
     <!-- Open Graph / Meta -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:url" content={canonicalURL.href} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={new URL(image, Astro.site || 'https://agogpixel.com')} />
+    <meta property="og:image" content={ogImageURL.href} />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Twitter Meta -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
   </head>
-  <body
-    class:list={[
-      'flex flex-col justify-between bg-cosmos-950 text-brand-starlight overflow-x-hidden',
-      scrollable
-        ? 'min-h-screen min-h-[100dvh] overflow-y-auto'
-        : 'h-screen min-h-[100dvh] overflow-y-auto md:overflow-y-hidden',
-    ]}
-  >
+  <body class="ap-app">
+    <a href="#main" class="ap-skip-to-content">Skip to content</a>
     <Header />
     <main
+      id="main"
+      tabindex="-1"
       class:list={[
-        'flex-1 flex flex-col items-center',
-        scrollable ? 'w-full justify-start' : 'justify-center min-h-0',
+        'ap-main',
+        scrollable ? 'ap-main--scrollable' : 'ap-main--centered',
       ]}
     >
       <slot />
