@@ -6,29 +6,29 @@ import Layout from '../layouts/Layout.astro';
   title="Agogpixel | Curious Software Development"
   description="An A- Studio. Curious Software Development."
 >
-  <!-- Jumbotron Section -->
-  <section class="relative w-full h-full flex-1 flex flex-col items-center justify-center px-4 py-4 sm:py-6">
-    <div class="relative z-10 mx-auto max-w-4xl text-center flex flex-col items-center">
-      <!-- Animated Rocket Guinea SVG from agogpixel-studio -->
-      <div class="mb-5 sm:mb-6 md:mb-8 relative flex items-center justify-center">
-        <img
-          src="/assets/rocket_guinea_pig_animated.svg"
-          alt="Agogpixel Rocket Guinea Pig"
-          class="relative h-52 w-52 sm:h-64 sm:w-64 md:h-72 md:w-72 lg:h-80 lg:w-80 object-contain select-none"
-          loading="eager"
-        />
+  <section class="ap-hero" aria-labelledby="hero-title">
+    <div class="ap-hero-inner">
+      <div class="ap-hero-media">
+        <picture>
+          <source
+            srcset="/assets/rocket_guinea_pig.svg"
+            media="(prefers-reduced-motion: reduce)"
+          />
+          <img
+            src="/assets/rocket_guinea_pig_animated.svg"
+            alt="Agogpixel Rocket Guinea Pig"
+            width="320"
+            height="320"
+            class="ap-hero-mascot"
+            loading="eager"
+          />
+        </picture>
       </div>
 
-      <hgroup class="flex flex-col items-center">
-        <p class="font-mono text-xs uppercase tracking-widest text-brand-lunar mb-2">
-          [ An A- Studio ]
-        </p>
-        <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl text-brand-starlight font-sans">
-          AGOGPIXEL
-        </h1>
-        <p class="mt-2.5 sm:mt-3 font-mono text-base sm:text-lg md:text-xl text-brand-amber-ui tracking-wide">
-          Curious Software Development
-        </p>
+      <hgroup class="ap-hero-heading-group">
+        <p class="ap-badge">[ An A- Studio ]</p>
+        <h1 id="hero-title" class="ap-hero-title">AGOGPIXEL</h1>
+        <p class="ap-hero-motto">Curious Software Development</p>
       </hgroup>
     </div>
   </section>

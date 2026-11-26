@@ -1,88 +1,81 @@
-# Agogpixel Web Portal
+# Agogpixel
 
-The official web portal for **Agogpixel** ([agogpixel.com](https://agogpixel.com)), an A- studio dedicated to curious software development.
+The official website for **Agogpixel** ([agogpixel.com](https://agogpixel.com)) — an A- Studio dedicated to curious software development.
 
----
+## Tech Stack
 
-## ⚡ Tech Stack & Features
+- **Static Framework**: [Astro 7](https://astro.build) (`trailingSlash: 'always'`, `build.format: 'directory'`, `inlineStylesheets: 'always'`) generating static HTML with zero client-side JavaScript.
+- **Styling**: Vanilla CSS (`src/styles/theme.css`, `src/styles/site.css`) built on semantic `--ap-*` tokens with a Deep Cosmos (`#030303`) surface and Paul Tol accessible high-contrast accents.
+- **Self-Hosted Typography**: Local variable `.woff2` subsets (`Inter` and `JetBrains Mono`) under `public/fonts/` with metric-matched fallback `@font-face` declarations and SIL OFL 1.1 attribution at `/credits/` (`public/credits/OFL.txt`).
+- **Deployment**: GitHub Actions (`.github/workflows/deploy.yml`) building and deploying `./dist` to GitHub Pages for `agogpixel.com`.
 
-- **Static Framework**: [Astro v5](https://astro.build) configured for pure static generation (`output: "static"`), delivering near-instant loading with zero unnecessary client JavaScript.
-- **Styling**: [Tailwind CSS](https://tailwindcss.com) configured with official studio brand colors:
-  - **Deep Cosmos Black**: `#030303` (Primary web canvas)
-  - **Thruster Amber**: `#C97320` (Interactive highlights)
-  - **Porthole Cyan**: `#4CC9F0` (Glows, accents)
-  - **Rocket Scarlet**: `#E63946` (Badges, accents)
-  - **Starlight White**: `#EEEEEE` (Headings, primary typography)
-- **Mascot Animation**: Studio animated rocket guinea pig vector illustration (`rocket_guinea_pig_animated.svg`) with embedded cosine rocking and multi-stage exhaust flame animations.
-- **CI/CD Deployment**: Automated GitHub Actions workflow (`deploy.yml`) deploying static builds to GitHub Pages with custom domain (`agogpixel.com`) and HTTPS enforcement.
-
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- **Node.js**: `v24.x` (or `>= 20.x`)
-- **npm**: `v11.x` (or `>= 10.x`)
 
-### Installation & Local Development
+- **Node.js**: `24.21.0` (pinned in `.nvmrc`; `engines.node`: `>=24.21.0 <25`)
+- **npm**: `>=11`
+
+### Local Development
 
 1. **Install dependencies**:
    ```bash
-   npm install
+   npm ci
    ```
-
-2. **Start the local development server**:
+2. **Start the development server**:
    ```bash
    npm run dev
    ```
-   Open `http://localhost:4321` in your browser to view the site.
+3. **Run type checks and build**:
+   ```bash
+   npm run check && npm run build
+   ```
 
----
-
-## 🛠 Available NPM Scripts
+## Available Scripts
 
 | Command | Action |
 | :--- | :--- |
-| `npm run dev` | Starts local dev server at `http://localhost:4321` with instant HMR |
-| `npm run build` | Runs TypeScript diagnostics (`astro check`) and compiles static output to `./dist` |
-| `npm run preview` | Spins up a local static server to preview the contents of `./dist` |
+| `npm run dev` | Starts local Astro dev server (`astro dev`) |
+| `npm run check` | Runs Astro and TypeScript diagnostics (`astro check`) |
+| `npm run build` | Builds static output into `./dist` (`astro build`) |
+| `npm run preview` | Serves `./dist` locally for verification (`astro preview`) |
 | `npm run astro` | Runs Astro CLI commands directly |
 
----
-
-## 📂 Project Architecture
+## Project Structure
 
 ```text
 agogpixel.github.io/
-├── .agents/                    # Subagent rules, guidelines, and skills
-│   └── rules/                  # Studio alignment and git workflow standards
-├── .github/
-│   └── workflows/
-│       └── deploy.yml          # GitHub Actions deployment to GitHub Pages
-├── docs/
-│   └── learnings/              # Architecture Decision Records (ADRs) & learnings
-├── public/                     # Static assets copied directly to dist/ root
-│   ├── assets/                 # SVGs, PNGs, and GIFs for mascot and branding
-│   ├── favicon/                # Browser favicons and site.webmanifest
-│   └── CNAME                   # Custom domain mapping (agogpixel.com)
+├── .github/workflows/
+│   ├── deploy.yml              # GitHub Pages build & deploy workflow
+│   └── hygiene.yml             # Public repository hygiene checks
+├── public/                     # Static assets copied verbatim to dist/
+│   ├── assets/                 # Mascot artwork and brand assets
+│   ├── credits/OFL.txt         # SIL Open Font License 1.1 text
+│   ├── fonts/                  # Self-hosted Inter & JetBrains Mono woff2 subsets
+│   ├── CNAME                   # Custom domain mapping (agogpixel.com)
+│   ├── site.webmanifest        # Web app manifest
+│   └── favicon* / *.png        # Root favicons and touch/app icons
 ├── src/
 │   ├── components/
-│   │   ├── Footer.astro        # Clean studio footer
-│   │   ├── Header.astro        # Clean header with logo and status mark
-│   │   └── MascotRocket.astro  # Reusable mascot component
+│   │   ├── Footer.astro        # Site footer
+│   │   └── Header.astro        # Primary navigation header
 │   ├── layouts/
-│   │   └── Layout.astro        # Global HTML shell, SEO metadata, fonts & styles
+│   │   └── Layout.astro        # Base HTML document shell & metadata
 │   ├── pages/
-│   │   └── index.astro         # Focused jumbotron landing page with animated mascot
+│   │   ├── 404.astro           # Custom 404 page (/404.html)
+│   │   ├── credits.astro       # Font and palette attributions (/credits/)
+│   │   ├── index.astro         # Studio landing page (/)
+│   │   └── sitemap.xml.ts      # Static XML sitemap (/sitemap.xml)
 │   └── styles/
-│       └── global.css          # Tailwind base/utilities and cosmos dark ambiance
+│       ├── site.css            # Layout, typography, and component styles
+│       └── theme.css           # @font-face rules and --ap-* design tokens
+├── .nvmrc                      # Pinned Node.js version (24.21.0)
 ├── astro.config.mjs            # Astro configuration
-├── tailwind.config.mjs         # Theme color palette, fonts, and animation tokens
-└── tsconfig.json               # TypeScript configuration extending astro/tsconfigs/strict
+├── package.json                # Dependencies and scripts
+└── tsconfig.json               # Strict Astro TypeScript configuration
 ```
 
----
+## Licensing & Credits
 
-## 📄 License & Copyright
-
-&copy; 2026 Agogpixel. All rights reserved.
+- **Typography & Color Schemes**: Third-party attributions and licenses are listed at [`/credits/`](https://agogpixel.com/credits/) (`public/credits/OFL.txt`).
+- **Copyright**: &copy; 2026 Agogpixel. All rights reserved.

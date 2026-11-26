@@ -1,36 +1,24 @@
 ---
 const pathname = Astro.url.pathname;
-const isDevlogsActive = pathname.startsWith('/devlogs');
 ---
 
-<header class="w-full border-b border-cosmos-600 bg-cosmos-950">
-  <nav aria-label="Primary Navigation" class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-    <ul class="flex items-center gap-3 list-none m-0 p-0">
-      <li class="brand-item">
-        <a href="/" class="inline-flex items-center gap-2.5 no-underline font-mono text-base font-bold tracking-wider text-brand-starlight hover:text-brand-cyan transition-colors">
+<header class="ap-header">
+  <nav aria-label="Primary navigation" class="ap-nav">
+    <ul>
+      <li class="ap-brand-item">
+        <a
+          href="/"
+          class="ap-brand"
+          aria-current={pathname === '/' ? 'page' : undefined}
+        >
           <img
             src="/assets/pixel/rocket_guinea_pig_pixel.svg"
-            alt="Agogpixel Rocket Guinea Pig"
-            class="h-8 w-8 object-contain"
+            alt=""
+            width="32"
+            height="32"
+            class="ap-brand-logo"
           />
-          AGOGPIXEL
-        </a>
-      </li>
-    </ul>
-
-    <ul class="flex items-center gap-4 list-none m-0 p-0 font-mono text-sm">
-      <li>
-        <a
-          href="/devlogs"
-          aria-current={isDevlogsActive ? 'page' : undefined}
-          class:list={[
-            'px-1 py-0.5 transition-colors underline-offset-4',
-            isDevlogsActive
-              ? 'text-brand-cyan underline decoration-brand-cyan font-semibold'
-              : 'text-brand-starlight no-underline hover:text-brand-cyan hover:underline',
-          ]}
-        >
-          Devlogs
+          <span>AGOGPIXEL</span>
         </a>
       </li>
     </ul>

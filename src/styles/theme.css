@@ -1,0 +1,107 @@
+/**
+ * Theme & Typography Stylesheet
+ *
+ * Inter (sans) + JetBrains Mono (mono)
+ * Provided by @fontsource-variable/* (pinned) — latin subset, roman + italic, swap display.
+ */
+
+/* Inter Variable (latin, roman) */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Inter Variable (latin, italic) */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/inter-latin-wght-italic.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metric-matched fallback computed via @capsizecss/unpack + @capsizecss/core from inter-latin-wght-normal.woff2 against Arial */
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial'), local('ArialMT');
+  ascent-override: 90.4365%;
+  descent-override: 22.518%;
+  line-gap-override: 0%;
+  size-adjust: 107.1194%;
+}
+
+/* JetBrains Mono Variable (latin, roman) */
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url('/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* JetBrains Mono Variable (latin, italic) */
+@font-face {
+  font-family: 'JetBrains Mono Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url('/fonts/jetbrains-mono-latin-wght-italic.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metric-matched fallback computed via @capsizecss/unpack + @capsizecss/core from jetbrains-mono-latin-wght-normal.woff2 against Courier New */
+@font-face {
+  font-family: 'JetBrains Mono Fallback';
+  src: local('Courier New'), local('CourierNewPSMT');
+  ascent-override: 102.0166%;
+  descent-override: 30.0049%;
+  size-adjust: 99.9837%;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Typography */
+  --ap-font-sans: 'Inter Variable', 'Inter Fallback', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --ap-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono Fallback', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --ap-line-height: 1.5;
+
+  /* Deep Cosmos Surfaces & Borders */
+  --ap-bg: #030303;
+  --ap-surface: #0a0a0a;
+  --ap-surface-subtle: #141414;
+  --ap-border-hairline: #1f1f1f;
+  --ap-border-subtle: #2b2b2b;
+  --ap-border-muted: #4e4e4e;
+
+  /* Paul Tol Dark-Cosmos Accessible Foreground & Accent Tokens */
+  --ap-color: #eeeeee;
+  --ap-muted-color: #a6a6a6;
+  --ap-primary: #4cc9f0;
+  --ap-primary-hover: #99ddff;
+  --ap-primary-bg: #163a47;
+  --ap-secondary: #f09235;
+  --ap-secondary-border: #c97320;
+  --ap-secondary-bg: #3d240c;
+  --ap-accent-scarlet: #e63946;
+  --ap-alert: #ee5566;
+  --ap-alert-bg: #421419;
+
+  /* Layout & Geometry */
+  --ap-container-max: 64rem;
+  --ap-measure: 72ch;
+  --ap-spacing: 1rem;
+  --ap-spacing-lg: 2rem;
+  --ap-gap-compact: 0.5rem;
+  --ap-border-radius: 0.25rem;
+  --ap-border-width: 0.0625rem;
+  --ap-border: var(--ap-border-width) solid var(--ap-border-subtle);
+  --ap-transition: 0.15s ease-in-out;
+  --ap-z-skip-link: 10000;
+}
