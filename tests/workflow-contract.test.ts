@@ -1,6 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateWorkflowContent } from '../scripts/gates/workflow-contract.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import {
+  runWorkflowContractGate,
+  validateWorkflowContent,
+} from '../scripts/gates/workflow-contract.ts';
+
+test('workflow-contract: live .github/workflows passes all checks', () => {
+  const workflowsDir = path.join(process.cwd(), '.github', 'workflows');
+  const entries = fs
+    .readdirSync(workflowsDir)
+    .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
+  assert.deepEqual(entries, ['ci.yml']);
+
+  const result = runWorkflowContractGate(workflowsDir);
+  assert.equal(
+    result.ok,
+    true,
+    `Workflow contract gate failed on live files:\n${result.errors.join('\n')}`
+  );
+  assert.equal(result.errors.length, 0);
+});
 
 test('workflow-contract: valid SHA-pinned CI workflow passes cleanly', () => {
   const validCiYaml = `
