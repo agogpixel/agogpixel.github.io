@@ -22,7 +22,7 @@ const pathname = Astro.url.pathname;
       <a
         href="/credits/"
         class="ap-footer-link"
-        aria-current={pathname.startsWith('/credits') ? 'page' : undefined}
+        aria-current={pathname === '/credits/' ? 'page' : undefined}
       >
         Credits
       </a>

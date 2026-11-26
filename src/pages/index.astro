@@ -9,14 +9,20 @@ import Layout from '../layouts/Layout.astro';
   <section class="ap-hero" aria-labelledby="hero-title">
     <div class="ap-hero-inner">
       <div class="ap-hero-media">
-        <img
-          src="/assets/rocket_guinea_pig_animated.svg"
-          alt="Agogpixel Rocket Guinea Pig"
-          width="320"
-          height="320"
-          class="ap-hero-mascot"
-          loading="eager"
-        />
+        <picture>
+          <source
+            srcset="/assets/rocket_guinea_pig.svg"
+            media="(prefers-reduced-motion: reduce)"
+          />
+          <img
+            src="/assets/rocket_guinea_pig_animated.svg"
+            alt="Agogpixel Rocket Guinea Pig"
+            width="320"
+            height="320"
+            class="ap-hero-mascot"
+            loading="eager"
+          />
+        </picture>
       </div>
 
       <hgroup class="ap-hero-heading-group">

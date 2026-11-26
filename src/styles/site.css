@@ -433,6 +433,8 @@ body.ap-app {
     --ap-bg: #ffffff;
     --ap-color: #000000;
     --ap-muted-color: #444444;
+    --ap-primary: #004488;
+    --ap-secondary: #883300;
   }
 
   .ap-skip-to-content,
