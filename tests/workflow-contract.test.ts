@@ -35,7 +35,7 @@ permissions:
   contents: read
 concurrency:
   group: \${{ github.workflow }}-\${{ github.ref }}
-  cancel-in-progress: \${{ github.workflow == 'CI' }}
+  cancel-in-progress: \${{ github.event_name == 'pull_request' }}
 jobs:
   security:
     name: Security
@@ -116,7 +116,7 @@ jobs:
   const errors = validateWorkflowContent(badYaml, 'ci.yml');
   assert.ok(errors.some((e) => e.includes('root permissions must specify \'contents: read\'')));
   assert.ok(errors.some((e) => e.includes('CI concurrency group must be caller-isolated')));
-  assert.ok(errors.some((e) => e.includes('caller-isolated \'cancel-in-progress')));
+  assert.ok(errors.some((e) => e.includes('PR-only cancellation \'cancel-in-progress')));
   assert.ok(errors.some((e) => e.includes('must specify \'timeout-minutes\'')));
   assert.ok(errors.some((e) => e.includes('elevated write privilege \'pages: write\'')));
   assert.ok(errors.some((e) => e.includes('40-character commit SHA')));
@@ -137,7 +137,7 @@ permissions:
   contents: read
 concurrency:
   group: \${{ github.workflow }}-\${{ github.ref }}
-  cancel-in-progress: \${{ github.workflow == 'CI' }}
+  cancel-in-progress: \${{ github.event_name == 'pull_request' }}
 jobs:
   security:
     runs-on: ubuntu-24.04
@@ -196,7 +196,7 @@ permissions:
   contents: read
 concurrency:
   group: \${{ github.workflow }}-\${{ github.ref }}
-  cancel-in-progress: \${{ github.workflow == 'CI' }}
+  cancel-in-progress: \${{ github.event_name == 'pull_request' }}
 jobs:
   security:
     runs-on: ubuntu-24.04
@@ -232,6 +232,16 @@ jobs:
       - name: Dispatch card
         run: echo "Sending notification"
 `;
+
+  const nonPrCancelYaml = securityWithoutZizmorYaml.replace(
+    "github.event_name == 'pull_request'",
+    "github.workflow == 'CI'"
+  );
+  assert.ok(
+    validateWorkflowContent(nonPrCancelYaml, 'ci.yml').some((e) =>
+      e.includes('PR-only cancellation')
+    )
+  );
 
   const errors = validateWorkflowContent(securityWithoutZizmorYaml, 'ci.yml');
   assert.deepEqual(errors, [

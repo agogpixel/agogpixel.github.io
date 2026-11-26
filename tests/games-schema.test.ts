@@ -285,6 +285,31 @@ test('gameSchema rejects empty fields, non-https itchUrl, and extraneous keys', 
       err.message.includes('URL must be a valid https:// URL')
   );
 
+  for (const nonItchUrl of [
+    'https://evil.com/game',
+    'https://itch.io/embed/100',
+    'https://itch.io.evil.com/game',
+    'https://evil-itch.io/game',
+    'https://user:pass@agogpixel.itch.io/game',
+    'https://agogpixel.itch.io:8443/game',
+  ]) {
+    assert.throws(
+      () =>
+        gameSchema.parse({
+          slug: 'non-itch-host',
+          title: 'Non-Itch Host',
+          description: 'Should pin itchUrl to https://*.itch.io/.',
+          draft: false,
+          itchEmbedId: 100,
+          itchUrl: nonItchUrl,
+        }),
+      (err: unknown) =>
+        err instanceof Error &&
+        err.name === 'ZodError' &&
+        err.message.includes('itchUrl must be an https://*.itch.io/ URL')
+    );
+  }
+
   assert.throws(
     () =>
       gameSchema.parse({

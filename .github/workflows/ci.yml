@@ -14,13 +14,14 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.workflow == 'CI' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   security:
     name: Security & Workflow Audits (zizmor)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # security-events: write enables SARIF upload on first-party runs; fork PRs disable SARIF upload below.
     permissions:
       contents: read
       security-events: write
@@ -33,6 +34,8 @@ jobs:
 
       - name: Run zizmor GitHub Actions security analysis
         uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          advanced-security: ${{ github.event.pull_request.head.repo.fork != true }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -167,4 +170,4 @@ jobs:
                   icon_url: "https://agogpixel.com/assets/favicon/favicon-32x32.png"
                 }
               }]
-            }' | curl -fsSL -H "Content-Type: application/json" -d @- "$WEBHOOK_URL"
+            }' | curl -fsSL --max-time 20 --retry 2 -H "Content-Type: application/json" -d @- "$WEBHOOK_URL" || echo "::warning::Discord notify failed"

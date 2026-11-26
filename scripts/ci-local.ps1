@@ -10,8 +10,6 @@
     - Gate 4: Production build, structural gates & weight budgets
     - Gate 5: Fixture build (SITE_FIXTURES=1), structural gates, diagnostics, accessibility & fixture budgets
     - Gate 6: CSS/OFL/credits lints, negative validation smoke checks & dist restore
-.PARAMETER BaseRef
-    Base git ref to compare against (defaults to merge-base with origin/main).
 .PARAMETER CI
     Enforces strict fail-closed contract for CI runners: emits GitHub Actions log groups and annotations.
 .PARAMETER Quick
@@ -23,7 +21,6 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$BaseRef = "",
     [switch]$CI,
     [switch]$Quick,
     [switch]$Gate0Only,
@@ -109,15 +106,6 @@ if ($IsCI) {
     }
 }
 
-if (-not $BaseRef) {
-    $mergeBase = & git -C $RootDir merge-base HEAD origin/main 2>$null
-    if ($LASTEXITCODE -eq 0 -and $mergeBase) {
-        $BaseRef = ($mergeBase | Out-String).Trim()
-    } else {
-        $BaseRef = "origin/main"
-    }
-}
-
 Push-Location $RootDir
 $prodLogFile = Join-Path ([System.IO.Path]::GetTempPath()) "agogpixel-astro-build-prod-$PID.log"
 $fixtureLogFile = Join-Path ([System.IO.Path]::GetTempPath()) "agogpixel-astro-build-fixture-$PID.log"
@@ -127,7 +115,6 @@ try {
     Write-Host "====================================================" -ForegroundColor Cyan
     Write-Host " agogpixel.github.io CI Orchestrator$(if ($IsCI) { ' [-CI Fail-Closed Mode]' } elseif ($Quick) { ' [-Quick Mode]' } else { '' })" -ForegroundColor Cyan
     Write-Host " Root: $RootDir" -ForegroundColor Gray
-    Write-Host " BaseRef: $BaseRef" -ForegroundColor Gray
     Write-Host "====================================================" -ForegroundColor Cyan
 
     $MaxGate = 6
@@ -163,33 +150,10 @@ try {
     }
 
     # -------------------------------------------------------------
-    # Gate 1: Action Commit SHA Pinning & Agent File Leak Audit
+    # Gate 1: Agent File Leak Audit (Action SHA pins enforced in Gate 0)
     # -------------------------------------------------------------
     $Gate1Timer = [System.Diagnostics.Stopwatch]::StartNew()
-    Enter-Gate 1 $MaxGate "Action Commit SHA Pinning & Agent File Leak Audit"
-    $wfDir = if ($WorkflowsPath) { $WorkflowsPath } else { Join-Path $RootDir ".github/workflows" }
-    if (Test-Path $wfDir) {
-        $wfFiles = @(Get-ChildItem -Path $wfDir -File | Where-Object { $_.Extension -in @(".yml", ".yaml") })
-        $unpinned = @()
-        foreach ($wf in $wfFiles) {
-            $lines = @(Get-Content $wf.FullName)
-            for ($i = 0; $i -lt $lines.Count; $i++) {
-                $line = $lines[$i]
-                if ($line -match '^\s*(?:-\s+)?uses:\s*[''"]?([^''"\s#]+)[''"]?') {
-                    $target = $matches[1]
-                    if ($target -notmatch '^(\./|\.\./|docker://)') {
-                        if ($target -notmatch '@[0-9a-fA-F]{40}') {
-                            $unpinned += "$($wf.Name) line $($i+1): $target"
-                        }
-                    }
-                }
-            }
-        }
-        if ($unpinned.Count -gt 0) {
-            Write-Fail "Unpinned action(s) detected (must pin to 40-char commit SHA):`n$($unpinned -join "`n")"
-            throw "Gate 1 Failed: Unpinned action(s) detected."
-        }
-    }
+    Enter-Gate 1 $MaxGate "Public-Clean Repo Leak Audit"
 
     $LeakPattern = '^(\.agents?/|\.gemini/|\.ai/|\.cursor/|\.claude/|scratch/|docs/learnings/|AGENTS\.md$|GEMINI\.md$|CLAUDE\.md$)'
     $TrackedFiles = @(& git -C $RootDir ls-files)
@@ -202,7 +166,7 @@ try {
         throw "Gate 1 Failed: Public-clean repo leak detected."
     }
     $GateResults["gate1_action_pins_and_leaks"] = "pass"
-    Exit-GatePass "Action commit SHA pins and public-clean leak audits passed" $Gate1Timer
+    Exit-GatePass "Public-clean leak audit passed (action SHA pins enforced in Gate 0)" $Gate1Timer
 
     # -------------------------------------------------------------
     # Gate 2: PowerShell AST Parse Validation (*.ps1)

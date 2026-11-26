@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { routeFromHtmlPath } from './zero-js.ts';
-import { SITE_ORIGIN, parseMetaRefreshRedirect } from './shared.ts';
+import { SITE_ORIGIN, parseMetaRefreshRedirect, walkFiles } from './shared.ts';
 
 export interface CanonicalSitemapResult {
   ok: boolean;
@@ -30,107 +30,94 @@ export function checkCanonicalAndSitemap(
 
   const htmlRoutes = new Map<string, { hasNoindex: boolean; isRedirect: boolean; file: string }>();
 
-  function walk(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.isFile()) {
-        const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
+  for (const fullPath of walkFiles(distDir, '.html')) {
+    const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
+    pagesChecked++;
+    const route = routeFromHtmlPath(relPath);
+    const content = fs.readFileSync(fullPath, 'utf8');
 
-        if (relPath.endsWith('.html')) {
-          pagesChecked++;
-          const route = routeFromHtmlPath(relPath);
-          const content = fs.readFileSync(fullPath, 'utf8');
+    const hasNoindex =
+      /<meta\b[^>]*?\bname\s*=\s*(?:"robots"|'robots')[^>]*?\bcontent\s*=\s*(?:"[^"]*noindex[^"]*"|'[^']*noindex[^']*')[^>]*>/i.test(
+        content
+      ) ||
+      /<meta\b[^>]*?\bcontent\s*=\s*(?:"[^"]*noindex[^"]*"|'[^']*noindex[^']*')[^>]*?\bname\s*=\s*(?:"robots"|'robots')[^>]*>/i.test(
+        content
+      );
 
-          const hasNoindex =
-            /<meta\b[^>]*?\bname\s*=\s*(?:"robots"|'robots')[^>]*?\bcontent\s*=\s*(?:"[^"]*noindex[^"]*"|'[^']*noindex[^']*')[^>]*>/i.test(
-              content
-            ) ||
-            /<meta\b[^>]*?\bcontent\s*=\s*(?:"[^"]*noindex[^"]*"|'[^']*noindex[^']*')[^>]*?\bname\s*=\s*(?:"robots"|'robots')[^>]*>/i.test(
-              content
-            );
+    const { isRedirect, target: redirectTarget } = parseMetaRefreshRedirect(content);
 
-          const { isRedirect, target: redirectTarget } = parseMetaRefreshRedirect(content);
+    if (isRedirect && !hasNoindex) {
+      errors.push(
+        `Redirect page "${relPath}" (route "${route}") must have <meta name="robots" content="noindex">.`
+      );
+    }
 
-          if (isRedirect && !hasNoindex) {
-            errors.push(
-              `Redirect page "${relPath}" (route "${route}") must have <meta name="robots" content="noindex">.`
-            );
-          }
+    htmlRoutes.set(route, { hasNoindex, isRedirect, file: relPath });
 
-          htmlRoutes.set(route, { hasNoindex, isRedirect, file: relPath });
+    const canonicalMatches: string[] = [];
+    const canonicalRegex = /<link\b[^>]*?\brel\s*=\s*(?:"canonical"|'canonical')[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi;
+    let match: RegExpExecArray | null;
+    while ((match = canonicalRegex.exec(content)) !== null) {
+      const href = match[1] ?? match[2] ?? match[3];
+      if (href) canonicalMatches.push(href);
+    }
+    const reverseCanonicalRegex = /<link\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*?\brel\s*=\s*(?:"canonical"|'canonical')[^>]*>/gi;
+    while ((match = reverseCanonicalRegex.exec(content)) !== null) {
+      const href = match[1] ?? match[2] ?? match[3];
+      if (href && !canonicalMatches.includes(href)) {
+        canonicalMatches.push(href);
+      }
+    }
 
-          const canonicalMatches: string[] = [];
-          const canonicalRegex = /<link\b[^>]*?\brel\s*=\s*(?:"canonical"|'canonical')[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi;
-          let match: RegExpExecArray | null;
-          while ((match = canonicalRegex.exec(content)) !== null) {
-            const href = match[1] ?? match[2] ?? match[3];
-            if (href) canonicalMatches.push(href);
-          }
-          const reverseCanonicalRegex = /<link\b[^>]*?\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*?\brel\s*=\s*(?:"canonical"|'canonical')[^>]*>/gi;
-          while ((match = reverseCanonicalRegex.exec(content)) !== null) {
-            const href = match[1] ?? match[2] ?? match[3];
-            if (href && !canonicalMatches.includes(href)) {
-              canonicalMatches.push(href);
-            }
-          }
+    // Non-redirect noindex pages (e.g. 404.html) omit canonical intentionally.
+    if (canonicalMatches.length === 0) {
+      if (!hasNoindex || isRedirect) {
+        errors.push(`Missing canonical tag in "${relPath}" (route "${route}")`);
+      }
+    } else if (canonicalMatches.length > 1) {
+      errors.push(
+        `Multiple canonical tags found in "${relPath}": ${canonicalMatches.join(', ')}`
+      );
+    } else {
+      const href = canonicalMatches[0];
+      if (!href.startsWith('http://') && !href.startsWith('https://')) {
+        errors.push(`Canonical URL "${href}" in "${relPath}" is not absolute.`);
+      } else if (isRedirect && redirectTarget) {
+        const selfCanonical = `${siteOrigin}${route}`;
+        const targetCanonical =
+          redirectTarget.startsWith('http://') || redirectTarget.startsWith('https://')
+            ? redirectTarget
+            : `${siteOrigin}${redirectTarget.startsWith('/') ? redirectTarget : `/${redirectTarget}`}`;
 
-          // Non-redirect noindex pages (e.g. 404.html) omit canonical intentionally.
-          if (canonicalMatches.length === 0) {
-            if (!hasNoindex || isRedirect) {
-              errors.push(`Missing canonical tag in "${relPath}" (route "${route}")`);
-            }
-          } else if (canonicalMatches.length > 1) {
-            errors.push(
-              `Multiple canonical tags found in "${relPath}": ${canonicalMatches.join(', ')}`
-            );
-          } else {
-            const href = canonicalMatches[0];
-            if (!href.startsWith('http://') && !href.startsWith('https://')) {
-              errors.push(`Canonical URL "${href}" in "${relPath}" is not absolute.`);
-            } else if (isRedirect && redirectTarget) {
-              const selfCanonical = `${siteOrigin}${route}`;
-              const targetCanonical =
-                redirectTarget.startsWith('http://') || redirectTarget.startsWith('https://')
-                  ? redirectTarget
-                  : `${siteOrigin}${redirectTarget.startsWith('/') ? redirectTarget : `/${redirectTarget}`}`;
-
-              if (href !== selfCanonical && href !== targetCanonical) {
-                errors.push(
-                  `Canonical URL mismatch in redirect "${relPath}": got "${href}", expected self-canonical "${selfCanonical}" or target "${targetCanonical}".`
-                );
-              } else if (href.startsWith(siteOrigin) && !href.endsWith('/')) {
-                errors.push(
-                  `Canonical URL "${href}" in "${relPath}" violates trailing-slash requirement.`
-                );
-              }
-            } else {
-              if (!href.startsWith(siteOrigin)) {
-                errors.push(
-                  `Canonical URL "${href}" in "${relPath}" origin does not match expected "${siteOrigin}".`
-                );
-              }
-              if (!href.endsWith('/')) {
-                errors.push(
-                  `Canonical URL "${href}" in "${relPath}" violates trailing-slash requirement.`
-                );
-              }
-              const expectedHref = `${siteOrigin}${route}`;
-              if (href !== expectedHref) {
-                errors.push(
-                  `Canonical URL mismatch in "${relPath}": got "${href}", expected "${expectedHref}".`
-                );
-              }
-            }
-          }
+        if (href !== selfCanonical && href !== targetCanonical) {
+          errors.push(
+            `Canonical URL mismatch in redirect "${relPath}": got "${href}", expected self-canonical "${selfCanonical}" or target "${targetCanonical}".`
+          );
+        } else if (href.startsWith(siteOrigin) && !href.endsWith('/')) {
+          errors.push(
+            `Canonical URL "${href}" in "${relPath}" violates trailing-slash requirement.`
+          );
+        }
+      } else {
+        if (!href.startsWith(siteOrigin)) {
+          errors.push(
+            `Canonical URL "${href}" in "${relPath}" origin does not match expected "${siteOrigin}".`
+          );
+        }
+        if (!href.endsWith('/')) {
+          errors.push(
+            `Canonical URL "${href}" in "${relPath}" violates trailing-slash requirement.`
+          );
+        }
+        const expectedHref = `${siteOrigin}${route}`;
+        if (href !== expectedHref) {
+          errors.push(
+            `Canonical URL mismatch in "${relPath}": got "${href}", expected "${expectedHref}".`
+          );
         }
       }
     }
   }
-
-  walk(distDir);
 
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   if (!fs.existsSync(sitemapPath)) {

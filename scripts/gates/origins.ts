@@ -10,9 +10,24 @@ import {
 } from '../../src/lib/games-schema.ts';
 import { getPublishedCatalogGames } from '../../src/data/games.ts';
 import { routeFromHtmlPath } from './zero-js.ts';
-import { SITE_ORIGIN, decodeHtmlEntities, detectForbiddenUriScheme } from './shared.ts';
+import {
+  SITE_ORIGIN,
+  decodeHtmlEntities,
+  detectForbiddenUriScheme,
+  extractAttributeUrls,
+  scanHtmlTags,
+  walkFiles,
+} from './shared.ts';
 
-export type ResourceKind = 'script' | 'link' | 'media' | 'iframe' | 'inline-style' | 'css';
+export type ResourceKind =
+  | 'script'
+  | 'link'
+  | 'media'
+  | 'iframe'
+  | 'iframe-srcdoc'
+  | 'inline-style'
+  | 'css'
+  | (string & {});
 
 export interface ScannedResource {
   url: string;
@@ -38,6 +53,8 @@ const APPROVED_EMBED_PATH_PATTERNS: ReadonlyMap<string, RegExp> = new Map([
   [ITCH_EMBED_ORIGIN, /^\/embed\/\d+\/?$/],
   [STEAM_WIDGET_ORIGIN, /^\/widget\/\d+\/?$/],
 ]);
+
+const MEDIA_RESOURCE_TAGS = new Set(['img', 'source', 'video', 'audio', 'picture', 'track']);
 
 /**
  * Determines whether a resource URL points outside siteOrigin.
@@ -109,90 +126,71 @@ export function scanCssResources(cssContent: string): string[] {
   return urls;
 }
 
+function classifyHtmlResourceKind(tagName: string, attrName: string): ResourceKind {
+  if (tagName === 'iframe') {
+    return attrName === 'src' ? 'iframe' : 'iframe-attr';
+  }
+  if (tagName === 'script') return 'script';
+  if (tagName === 'link') return 'link';
+  if (MEDIA_RESOURCE_TAGS.has(tagName)) return 'media';
+  return tagName;
+}
+
 /**
- * Extracts resource-loading references from HTML (excluding outbound <a href> and <link rel="canonical">).
+ * Deny-by-default scan of all URL-bearing attributes and CSS resource references in HTML
+ * (excluding only outbound <a href> and strict <link rel="canonical" href>).
  */
 export function scanHtmlResources(htmlContent: string): ScannedResource[] {
   const resources: ScannedResource[] = [];
+  const tags = scanHtmlTags(htmlContent);
 
-  // 1. <script ... src="...">
-  const scriptRegex = /<script\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi;
-  let match: RegExpExecArray | null;
-  while ((match = scriptRegex.exec(htmlContent)) !== null) {
-    const val = match[1] ?? match[2] ?? match[3];
-    if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'script' });
-  }
+  for (const tag of tags) {
+    const relAttr = tag.attributes.find((a) => a.name === 'rel');
+    const relTokens = relAttr
+      ? decodeHtmlEntities(relAttr.value)
+          .trim()
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean)
+      : [];
+    const isStrictCanonicalLink =
+      tag.tagName === 'link' && relTokens.length === 1 && relTokens[0] === 'canonical';
 
-  // 2. <link ... href="..."> (excluding rel="canonical")
-  const linkRegex = /<link\b([^>]*)>/gi;
-  while ((match = linkRegex.exec(htmlContent)) !== null) {
-    const tag = match[1];
-    if (/\brel\s*=\s*(?:"canonical"|'canonical'|canonical\b)/i.test(tag)) {
-      continue;
-    }
-    const hrefMatch = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
-    if (hrefMatch) {
-      const val = hrefMatch[1] ?? hrefMatch[2] ?? hrefMatch[3];
-      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'link' });
-    }
-  }
+    for (const attr of tag.attributes) {
+      if (tag.tagName === 'a' && attr.name === 'href') {
+        continue;
+      }
+      if (isStrictCanonicalLink && attr.name === 'href') {
+        continue;
+      }
 
-  // 3. <img ... src/srcset> and <source ... src/srcset>
-  const mediaTagRegex = /<(?:img|source)\b[^>]*>/gi;
-  while ((match = mediaTagRegex.exec(htmlContent)) !== null) {
-    const tag = match[0];
-    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
-    if (srcMatch) {
-      const val = srcMatch[1] ?? srcMatch[2] ?? srcMatch[3];
-      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'media' });
-    }
-    const srcsetMatch = /\bsrcset\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
-    if (srcsetMatch) {
-      const srcsetVal = srcsetMatch[1] ?? srcsetMatch[2] ?? srcsetMatch[3];
-      if (srcsetVal) {
-        const parts = srcsetVal.split(',').map((p) => p.trim().split(/\s+/)[0]);
-        for (const p of parts) {
-          if (p) resources.push({ url: decodeHtmlEntities(p), kind: 'media' });
+      if (attr.name === 'srcdoc') {
+        resources.push({ url: decodeHtmlEntities(attr.value), kind: 'iframe-srcdoc' });
+        continue;
+      }
+
+      if (attr.name === 'style') {
+        for (const cssUrl of scanCssResources(decodeHtmlEntities(attr.value))) {
+          resources.push({ url: cssUrl, kind: 'inline-style' });
         }
+        continue;
+      }
+
+      const urls = extractAttributeUrls(attr.name, attr.value, tag.tagName);
+      if (urls.length === 0) continue;
+
+      const kind = classifyHtmlResourceKind(tag.tagName, attr.name);
+      for (const u of urls) {
+        resources.push({ url: u, kind });
       }
     }
   }
 
-  // 4. <iframe ... src="...">
-  const iframeRegex = /<iframe\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))[^>]*>/gi;
-  while ((match = iframeRegex.exec(htmlContent)) !== null) {
-    const val = match[1] ?? match[2] ?? match[3];
-    if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'iframe' });
-  }
-
-  // 5. <video> / <audio> ... src and poster
-  const avRegex = /<(?:video|audio)\b[^>]*>/gi;
-  while ((match = avRegex.exec(htmlContent)) !== null) {
-    const tag = match[0];
-    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
-    if (srcMatch) {
-      const val = srcMatch[1] ?? srcMatch[2] ?? srcMatch[3];
-      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'media' });
-    }
-    const posterMatch = /\bposter\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(tag);
-    if (posterMatch) {
-      const val = posterMatch[1] ?? posterMatch[2] ?? posterMatch[3];
-      if (val) resources.push({ url: decodeHtmlEntities(val), kind: 'media' });
-    }
-  }
-
-  // 6. <style> blocks and inline style="..." attributes
+  const htmlWithoutComments = htmlContent.replace(/<!--[\s\S]*?-->/g, '');
   const styleBlockRegex = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
-  while ((match = styleBlockRegex.exec(htmlContent)) !== null) {
+  let match: RegExpExecArray | null;
+  while ((match = styleBlockRegex.exec(htmlWithoutComments)) !== null) {
     for (const url of scanCssResources(match[1])) {
-      resources.push({ url, kind: 'inline-style' });
-    }
-  }
-
-  const styleAttrRegex = /\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
-  while ((match = styleAttrRegex.exec(htmlContent)) !== null) {
-    const styleVal = match[1] ?? match[2] ?? '';
-    for (const url of scanCssResources(styleVal)) {
       resources.push({ url, kind: 'inline-style' });
     }
   }
@@ -289,76 +287,74 @@ export function checkOrigins(
     };
   }
 
-  function walk(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.isFile()) {
-        const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
+  for (const fullPath of walkFiles(distDir, ['.html', '.css'])) {
+    const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
 
-        if (relPath.endsWith('.html')) {
-          const content = fs.readFileSync(fullPath, 'utf8');
-          const route = routeFromHtmlPath(relPath);
-          const resources = scanHtmlResources(content);
+    if (relPath.endsWith('.html')) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const route = routeFromHtmlPath(relPath);
+      const resources = scanHtmlResources(content);
 
-          for (const res of resources) {
-            resourcesChecked++;
-            const forbiddenScheme = detectForbiddenUriScheme(res.url);
-            if (forbiddenScheme) {
-              errors.push(
-                `Forbidden URI scheme "${forbiddenScheme}" in <${res.kind}> resource "${res.url}" on route "${route}" (${relPath}).`
-              );
-              continue;
-            }
+      for (const res of resources) {
+        resourcesChecked++;
 
-            const { isExternal, origin } = isNonSameOrigin(res.url, siteOrigin);
-            if (!isExternal || !origin) {
-              continue;
-            }
+        if (res.kind === 'iframe-srcdoc') {
+          errors.push(
+            `Forbidden srcdoc attribute detected on route "${route}" (${relPath}). Inline srcdoc documents are disallowed.`
+          );
+          continue;
+        }
 
-            if (res.kind !== 'iframe') {
-              errors.push(
-                `Unauthorized third-party origin "${origin}" in <${res.kind}> resource "${res.url}" on route "${route}" (${relPath}). Only manifest-scoped storefront <iframe src> embeds may load external origins.`
-              );
-              continue;
-            }
+        const forbiddenScheme = detectForbiddenUriScheme(res.url);
+        if (forbiddenScheme) {
+          errors.push(
+            `Forbidden URI scheme "${forbiddenScheme}" in <${res.kind}> resource "${res.url}" on route "${route}" (${relPath}).`
+          );
+          continue;
+        }
 
-            if (isAllowedStorefrontIframe(res.url, route, grants)) {
-              externalIframesAllowed++;
-            } else {
-              errors.push(
-                `Unauthorized third-party <iframe> origin or URL "${res.url}" on route "${route}" (${relPath}). Must match a published game catalog itch.io/Steam widget embed on "/".`
-              );
-            }
-          }
-        } else if (relPath.endsWith('.css')) {
-          const content = fs.readFileSync(fullPath, 'utf8');
-          const urls = scanCssResources(content);
-          for (const u of urls) {
-            resourcesChecked++;
-            const forbiddenScheme = detectForbiddenUriScheme(u);
-            if (forbiddenScheme) {
-              errors.push(
-                `Forbidden URI scheme "${forbiddenScheme}" in CSS resource "${u}" in file "${relPath}".`
-              );
-              continue;
-            }
+        const { isExternal, origin } = isNonSameOrigin(res.url, siteOrigin);
+        if (!isExternal || !origin) {
+          continue;
+        }
 
-            const { isExternal, origin } = isNonSameOrigin(u, siteOrigin);
-            if (isExternal && origin) {
-              errors.push(
-                `Unauthorized third-party origin "${origin}" in CSS resource "${u}" in file "${relPath}". Site CSS must have 0 external origins.`
-              );
-            }
-          }
+        if (res.kind !== 'iframe') {
+          errors.push(
+            `Unauthorized third-party origin "${origin}" in <${res.kind}> resource "${res.url}" on route "${route}" (${relPath}). Only manifest-scoped storefront <iframe src> embeds may load external origins.`
+          );
+          continue;
+        }
+
+        if (isAllowedStorefrontIframe(res.url, route, grants)) {
+          externalIframesAllowed++;
+        } else {
+          errors.push(
+            `Unauthorized third-party <iframe> origin or URL "${res.url}" on route "${route}" (${relPath}). Must match a published game catalog itch.io/Steam widget embed on "/".`
+          );
+        }
+      }
+    } else if (relPath.endsWith('.css')) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const urls = scanCssResources(content);
+      for (const u of urls) {
+        resourcesChecked++;
+        const forbiddenScheme = detectForbiddenUriScheme(u);
+        if (forbiddenScheme) {
+          errors.push(
+            `Forbidden URI scheme "${forbiddenScheme}" in CSS resource "${u}" in file "${relPath}".`
+          );
+          continue;
+        }
+
+        const { isExternal, origin } = isNonSameOrigin(u, siteOrigin);
+        if (isExternal && origin) {
+          errors.push(
+            `Unauthorized third-party origin "${origin}" in CSS resource "${u}" in file "${relPath}". Site CSS must have 0 external origins.`
+          );
         }
       }
     }
   }
-
-  walk(distDir);
 
   return {
     ok: errors.length === 0,

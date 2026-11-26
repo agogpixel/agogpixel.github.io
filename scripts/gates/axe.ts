@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type Browser, type BrowserContext } from 'playwright';
 import axe from 'axe-core';
-import { parseMetaRefreshRedirect } from './shared.ts';
+import { parseMetaRefreshRedirect, walkFiles } from './shared.ts';
 
 export const DEFAULT_MAX_CLS = 0.1;
 
@@ -107,19 +107,7 @@ export function isStorefrontWidgetStubUrl(urlStr: string): boolean {
 }
 
 export function findHtmlFiles(dir: string): string[] {
-  let results: string[] = [];
-  if (!fs.existsSync(dir)) return results;
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      results = results.concat(findHtmlFiles(fullPath));
-    } else if (entry.isFile() && entry.name.endsWith('.html')) {
-      results.push(fullPath);
-    }
-  }
-  return results;
+  return walkFiles(dir, '.html');
 }
 
 export function filePathToRoute(distDir: string, filePath: string): string {
@@ -247,15 +235,16 @@ export async function startDistServer(distDir: string): Promise<{ server: http.S
 }
 
 export function nodeMatchesSelector(targetSelectors: unknown, allowlistSelector: string): boolean {
+  const trimmedAllowlist = allowlistSelector.trim();
+  if (!trimmedAllowlist) {
+    return false;
+  }
   if (Array.isArray(targetSelectors)) {
-    for (const t of targetSelectors) {
-      const str = String(t);
-      if (str.includes(allowlistSelector) || str.endsWith(allowlistSelector)) {
-        return true;
-      }
-    }
-  } else if (typeof targetSelectors === 'string') {
-    return targetSelectors.includes(allowlistSelector) || targetSelectors.endsWith(allowlistSelector);
+    const normalized = targetSelectors.map((t) => String(t).trim()).filter(Boolean);
+    return normalized.some((t) => t === trimmedAllowlist) || normalized.join(' ') === trimmedAllowlist;
+  }
+  if (typeof targetSelectors === 'string') {
+    return targetSelectors.trim() === trimmedAllowlist;
   }
   return false;
 }
@@ -369,7 +358,8 @@ export async function runAxeAudit(options: AxeAuditOptions): Promise<AxeAuditRes
     for (const route of routes) {
       for (const scheme of schemes) {
         const stubbedWidgetUrls: string[] = [];
-        const context = await browser.newContext({ colorScheme: scheme });
+        // bypassCSP enables page.addScriptTag(axe.source) while the static HTML enforces script-src 'none'
+        const context = await browser.newContext({ colorScheme: scheme, bypassCSP: true });
         await installOfflineRouteGuard(context, localOrigin, route, stubbedWidgetUrls, errors);
 
         const page = await context.newPage();

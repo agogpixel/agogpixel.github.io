@@ -117,6 +117,9 @@ export function lintOflAndFontParity(rootDir: string): string[] {
     if (!oflContent.includes('SIL OPEN FONT LICENSE Version 1.1')) {
       errors.push(`${oflPath} does not contain the SIL OPEN FONT LICENSE Version 1.1 text.`);
     }
+    if (!oflContent.includes('redistribute, and sell modified and unmodified copies of the Font')) {
+      errors.push(`${oflPath} does not match the canonical SIL OFL 1.1 permission clause.`);
+    }
 
     if (fs.existsSync(packageJsonPath)) {
       const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as Record<string, unknown>;

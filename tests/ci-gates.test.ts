@@ -19,6 +19,7 @@ import { checkBudgets, getPageType } from '../scripts/gates/budgets.ts';
 import { validateDiagnosticsLogs } from '../scripts/gates/diagnostics.ts';
 import {
   isStorefrontWidgetStubUrl,
+  nodeMatchesSelector,
   resolveMaxClsBudget,
   runAxeAudit,
   startDistServer,
@@ -31,6 +32,9 @@ import {
   runIntegrityLints,
 } from '../scripts/gates/integrity-lint.ts';
 import { getPublishedCatalogGames } from '../src/data/games.ts';
+
+const VALID_META_CSP =
+  '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'none\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\'; font-src \'self\'; manifest-src \'self\'; connect-src \'none\'; object-src \'none\'; base-uri \'none\'; form-action \'none\'; frame-src https://itch.io https://store.steampowered.com">';
 
 function makeTempDir(t: test.TestContext, prefix: string): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -76,20 +80,59 @@ test('contrast-pairs: passes all --ap-* dark tokens and flags substandard contra
   assert.ok(calculateContrastRatio('#eeeeee', '#030303') > 17);
 });
 
-test('zero-js: rejects <script> tags and .js files in dist', (t) => {
+test('zero-js: rejects <script>, on*= handlers, srcdoc, missing/weak CSP, and .js files in dist', (t) => {
   const tmpDir = makeTempDir(t, 'ap-zero-js-');
-  fs.writeFileSync(path.join(tmpDir, 'index.html'), '<!doctype html><html><body>OK</body></html>');
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    `<!doctype html><html><head>${VALID_META_CSP}</head><body><div data-onclick="noop">OK</div></body></html>`
+  );
   assert.equal(checkZeroJs(tmpDir).ok, true);
+
+  // Missing meta CSP fails
+  fs.writeFileSync(path.join(tmpDir, 'index.html'), '<!doctype html><html><body>No CSP</body></html>');
+  const missingCspRes = checkZeroJs(tmpDir);
+  assert.equal(missingCspRes.ok, false);
+  assert.match(missingCspRes.errors[0], /Missing <meta http-equiv="Content-Security-Policy">/);
+
+  // Weak meta CSP fails
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    '<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'self\'; img-src \'self\'; font-src \'self\'; manifest-src \'self\'; connect-src \'none\'; object-src \'none\'; base-uri \'none\'; form-action \'none\'"></head><body></body></html>'
+  );
+  const weakCspRes = checkZeroJs(tmpDir);
+  assert.equal(weakCspRes.ok, false);
+  assert.match(weakCspRes.errors[0], /script-src 'none'/);
 
   fs.writeFileSync(
     path.join(tmpDir, 'index.html'),
-    '<!doctype html><html><head><script>alert(1)</script></head><body></body></html>'
+    `<!doctype html><html><head>${VALID_META_CSP}<script>alert(1)</script></head><body></body></html>`
   );
   const scriptRes = checkZeroJs(tmpDir);
   assert.equal(scriptRes.ok, false);
   assert.match(scriptRes.errors[0], /Forbidden <script> tag/);
 
-  fs.writeFileSync(path.join(tmpDir, 'index.html'), '<!doctype html><html><body>OK</body></html>');
+  // Inline event handlers (quoted, unquoted, uppercase, no-space) and srcdoc
+  for (const payload of [
+    '<a href="/" onclick="fetch(\'//x\')">Click</a>',
+    '<a href="/"onclick="fetch(\'//x\')">NoSpace</a>',
+    '<img src=/a.png onerror=alert(1) alt="">',
+    '<body ONLOAD="alert(1)"></body>',
+    '<div onclick=alert(1)>Unquoted</div>',
+    '<iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe>',
+    '<iframe srcdoc></iframe>',
+  ]) {
+    fs.writeFileSync(
+      path.join(tmpDir, 'index.html'),
+      `<!doctype html><html><head>${VALID_META_CSP}</head><body>${payload}</body></html>`
+    );
+    const handlerRes = checkZeroJs(tmpDir);
+    assert.equal(handlerRes.ok, false, `Expected zero-js to reject payload: ${payload}`);
+  }
+
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    `<!doctype html><html><head>${VALID_META_CSP}</head><body>OK</body></html>`
+  );
   fs.writeFileSync(path.join(tmpDir, 'bundle.js'), 'console.log(1);');
   const fileRes = checkZeroJs(tmpDir);
   assert.equal(fileRes.ok, false);
@@ -136,6 +179,39 @@ test('origins: enforces 0 external origins in prod and manifest-scoped widget if
   const nonIframeCheck = checkOrigins(tmpDir, fixtureGrants);
   assert.equal(nonIframeCheck.ok, false);
   assert.match(nonIframeCheck.errors[0], /Unauthorized third-party origin/);
+
+  // Deny-by-default URL-attribute scan across all resource-bearing HTML/SVG tags and srcdoc
+  const forbiddenOriginTags = [
+    '<embed src="https://evil.com/a.swf">',
+    '<object data="https://evil.com/a.bin"></object>',
+    '<form action="https://evil.com/post"></form>',
+    '<button formaction="https://evil.com/post">Go</button>',
+    '<base href="https://evil.com/">',
+    '<meta http-equiv=refresh content="0;url=https://evil.com/">',
+    '<input type=image src="https://evil.com/btn.png">',
+    '<track src="https://evil.com/sub.vtt">',
+    '<svg><image href="https://evil.com/a.png"/></svg>',
+    '<svg><use href="https://evil.com/sprite.svg#icon"/></svg>',
+    '<svg><use xlink:href="https://evil.com/sprite.svg#icon"/></svg>',
+    '<link rel="preload" as="image" imagesrcset="https://evil.com/hero.png 1x">',
+    '<link rel="canonical stylesheet" href="https://evil.com/s.css">',
+    '<iframe srcdoc="https://evil.com/"></iframe>',
+  ];
+  for (const tagSnippet of forbiddenOriginTags) {
+    fs.writeFileSync(
+      path.join(tmpDir, 'index.html'),
+      `<!doctype html><html><head></head><body>${tagSnippet}</body></html>`
+    );
+    const res = checkOrigins(tmpDir, fixtureGrants);
+    assert.equal(res.ok, false, `Expected checkOrigins to reject: ${tagSnippet}`);
+  }
+
+  // Same-document SVG fragment and strict canonical link remain permitted
+  fs.writeFileSync(
+    path.join(tmpDir, 'index.html'),
+    '<!doctype html><html><head><link rel="canonical" href="https://agogpixel.com/"></head><body><svg><use href="#local-icon"/></svg></body></html>'
+  );
+  assert.equal(checkOrigins(tmpDir, fixtureGrants).ok, true);
 });
 
 test('links & canonical-sitemap & budgets: validate agogpixel.com structure and fail on violations', (t) => {
@@ -204,10 +280,16 @@ test('axe: widget stub matcher, CLS budget resolver, and offline stubbing audit 
   assert.equal(isStorefrontWidgetStubUrl('https://store.steampowered.com/widget/9999002/'), true);
   assert.equal(isStorefrontWidgetStubUrl('https://example.com/script.js'), false);
 
+  assert.equal(nodeMatchesSelector(['#main > a.ap-game-link'], '#main > a.ap-game-link'), true);
+  assert.equal(nodeMatchesSelector(['#main > a.ap-game-link'], 'a'), false);
+  assert.equal(nodeMatchesSelector(['div.ap-card'], 'div'), false);
+  assert.equal(nodeMatchesSelector('div.ap-card', 'ap-card'), false);
+  assert.equal(nodeMatchesSelector(['a'], ''), false);
+
   const tmpDir = makeTempDir(t, 'ap-axe-');
   fs.writeFileSync(
     path.join(tmpDir, 'index.html'),
-    `<!doctype html><html lang="en"><head><title>Test</title><style>html,body{background:#030303;color:#eeeeee;}</style></head><body><main><h1>Agogpixel</h1><iframe title="Itch Embed" width="552" height="167" src="https://itch.io/embed/9999001?bg_color=0a0a0a"></iframe></main></body></html>`
+    `<!doctype html><html lang="en"><head>${VALID_META_CSP}<title>Test</title><style>html,body{background:#030303;color:#eeeeee;}</style></head><body><main><h1>Agogpixel</h1><iframe title="Itch Embed" width="552" height="167" src="https://itch.io/embed/9999001?bg_color=0a0a0a"></iframe></main></body></html>`
   );
 
   const budgetsFile = path.join(tmpDir, 'budgets.json');
@@ -296,20 +378,18 @@ test('ci-local.ps1: passes AST parse and enforces fail-closed -CI flag validatio
     cwd: process.cwd(),
     encoding: 'utf8',
   });
-  if (!pwshCheck.error) {
-    assert.equal(pwshCheck.status, 1);
-    assert.match(`${pwshCheck.stdout}\n${pwshCheck.stderr}`, /CI mode is fail-closed/);
-  }
+  assert.ifError(pwshCheck.error);
+  assert.equal(pwshCheck.status, 1);
+  assert.match(`${pwshCheck.stdout}\n${pwshCheck.stderr}`, /CI mode is fail-closed/);
 
   const ghEnvCheck = spawnSync('pwsh', ['-NoProfile', '-File', scriptPath, '-Quick'], {
     cwd: process.cwd(),
     encoding: 'utf8',
     env: { ...process.env, GITHUB_ACTIONS: 'true' },
   });
-  if (!ghEnvCheck.error) {
-    assert.equal(ghEnvCheck.status, 1);
-    assert.match(`${ghEnvCheck.stdout}\n${ghEnvCheck.stderr}`, /CI mode is fail-closed/);
-  }
+  assert.ifError(ghEnvCheck.error);
+  assert.equal(ghEnvCheck.status, 1);
+  assert.match(`${ghEnvCheck.stdout}\n${ghEnvCheck.stderr}`, /CI mode is fail-closed/);
 });
 
 test('axe server: enforces strict directory jail and rejects path traversal and malformed percent encoding', async (t) => {
@@ -361,7 +441,7 @@ test('zero-js, links, and origins: reject javascript:, vbscript:, and active dat
   // 1. <a href="javascript:..."> and entity-obfuscated / vbscript: / data:text/html links
   fs.writeFileSync(
     path.join(tmpDir, 'index.html'),
-    `<!doctype html><html><body>
+    `<!doctype html><html><head>${VALID_META_CSP}</head><body>
       <a href="javascript:alert(1)">Play</a>
       <a href="&#106;avascript:alert(2)">Obfuscated</a>
       <a href="vbscript:msgbox(1)">VB</a>
@@ -384,7 +464,7 @@ test('zero-js, links, and origins: reject javascript:, vbscript:, and active dat
   // 2. <iframe src="javascript:..."> and <iframe src="data:text/html;base64,...">
   fs.writeFileSync(
     path.join(tmpDir, 'index.html'),
-    `<!doctype html><html><body>
+    `<!doctype html><html><head>${VALID_META_CSP}</head><body>
       <iframe src="javascript:alert(1)"></iframe>
       <iframe src="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="></iframe>
     </body></html>`
@@ -412,7 +492,7 @@ test('zero-js, links, and origins: reject javascript:, vbscript:, and active dat
 
   fs.writeFileSync(
     path.join(tmpDir, 'index.html'),
-    '<!doctype html><html><body><img src="data:image/png;base64,iVBORw0KGgo=" alt=""></body></html>'
+    `<!doctype html><html><head>${VALID_META_CSP}</head><body><img src="data:image/png;base64,iVBORw0KGgo=" alt=""></body></html>`
   );
   assert.equal(checkZeroJs(tmpDir).ok, true);
   assert.equal(checkOrigins(tmpDir, prodGrants).ok, true);

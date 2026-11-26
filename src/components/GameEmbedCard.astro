@@ -68,7 +68,7 @@ const hasExternalLinks = game.itchUrl !== undefined || steamStoreUrl !== undefin
         <a
           href={game.itchUrl}
           class="ap-game-link"
-          rel="external"
+          rel="external noopener noreferrer"
           aria-label={`View on itch.io — ${game.title}`}
         >
           View on itch.io
@@ -78,7 +78,7 @@ const hasExternalLinks = game.itchUrl !== undefined || steamStoreUrl !== undefin
         <a
           href={steamStoreUrl}
           class="ap-game-link"
-          rel="external"
+          rel="external noopener noreferrer"
           aria-label={`View on Steam — ${game.title}`}
         >
           View on Steam

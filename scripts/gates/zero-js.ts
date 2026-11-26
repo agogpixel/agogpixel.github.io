@@ -1,13 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { detectForbiddenUriScheme } from './shared.ts';
+import {
+  detectForbiddenUriScheme,
+  extractAttributeUrls,
+  scanHtmlTags,
+  validateMetaCsp,
+  walkFiles,
+} from './shared.ts';
 
 export interface ZeroJsResult {
   ok: boolean;
   errors: string[];
   htmlFilesChecked: number;
 }
+
+const EVENT_HANDLER_ATTR_REGEX = /^on[a-z]+$/i;
 
 export function routeFromHtmlPath(htmlRelativePath: string): string {
   let normalized = htmlRelativePath.replace(/\\/g, '/');
@@ -26,7 +34,8 @@ export function routeFromHtmlPath(htmlRelativePath: string): string {
 }
 
 /**
- * Enforces zero client-side JavaScript across all built HTML routes and zero .js/.mjs assets in dist/.
+ * Enforces zero client-side JavaScript (no <script>, no on*= handlers, no srcdoc,
+ * no executable URI schemes, strict meta CSP) across built HTML routes and zero .js/.mjs assets in dist/.
  */
 export function checkZeroJs(
   distDir: string,
@@ -45,67 +54,68 @@ export function checkZeroJs(
 
   const allJsFiles: string[] = [];
 
-  function walk(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        walk(fullPath);
-      } else if (entry.isFile()) {
-        const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
+  for (const fullPath of walkFiles(distDir)) {
+    const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
 
-        if (relPath.endsWith('.js') || relPath.endsWith('.mjs')) {
-          if (!relPath.startsWith('.prerender/')) {
-            allJsFiles.push(relPath);
-          }
+    if (relPath.endsWith('.js') || relPath.endsWith('.mjs')) {
+      if (!relPath.startsWith('.prerender/')) {
+        allJsFiles.push(relPath);
+      }
+      continue;
+    }
+
+    if (!relPath.endsWith('.html')) {
+      continue;
+    }
+
+    htmlFilesChecked++;
+    const route = routeFromHtmlPath(relPath);
+    const content = fs.readFileSync(fullPath, 'utf8');
+
+    if (allowedJsRoutes.has(route)) {
+      continue;
+    }
+
+    if (/<script\b/i.test(content)) {
+      errors.push(
+        `Forbidden <script> tag found in HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
+      );
+    }
+
+    const tags = scanHtmlTags(content);
+    for (const tag of tags) {
+      for (const attr of tag.attributes) {
+        if (EVENT_HANDLER_ATTR_REGEX.test(attr.name)) {
+          errors.push(
+            `Forbidden inline event handler attribute "${attr.rawName}" on <${tag.tagName}> in HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
+          );
+          continue;
         }
 
-        if (relPath.endsWith('.html')) {
-          htmlFilesChecked++;
-          const route = routeFromHtmlPath(relPath);
-          const content = fs.readFileSync(fullPath, 'utf8');
+        if (attr.name === 'srcdoc') {
+          errors.push(
+            `Forbidden "srcdoc" attribute on <${tag.tagName}> in HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
+          );
+          continue;
+        }
 
-          if (!allowedJsRoutes.has(route)) {
-            if (/<script\b/i.test(content)) {
-              errors.push(
-                `Forbidden <script> tag found in HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
-              );
-            }
-
-            const htmlWithoutComments = content.replace(/<!--[\s\S]*?-->/g, '');
-            const tagRegex = /<[a-zA-Z][a-zA-Z0-9:-]*\b((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
-            let tagMatch: RegExpExecArray | null;
-            while ((tagMatch = tagRegex.exec(htmlWithoutComments)) !== null) {
-              const attrs = tagMatch[1];
-              const attrRegex =
-                /\b(href|src|action|formaction|data|poster|srcset)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
-              let attrMatch: RegExpExecArray | null;
-              while ((attrMatch = attrRegex.exec(attrs)) !== null) {
-                const attrName = attrMatch[1].toLowerCase();
-                const rawVal = attrMatch[2] ?? attrMatch[3] ?? attrMatch[4] ?? '';
-                const candidates =
-                  attrName === 'srcset'
-                    ? rawVal.split(',').map((part) => part.trim().split(/\s+/)[0])
-                    : [rawVal];
-
-                for (const candidate of candidates) {
-                  if (!candidate) continue;
-                  const forbiddenScheme = detectForbiddenUriScheme(candidate);
-                  if (forbiddenScheme) {
-                    errors.push(
-                      `Forbidden executable URI scheme "${forbiddenScheme}" in ${attrName} on HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
-                    );
-                  }
-                }
-              }
-            }
+        const urls = extractAttributeUrls(attr.name, attr.value, tag.tagName);
+        for (const candidate of urls) {
+          const forbiddenScheme = detectForbiddenUriScheme(candidate);
+          if (forbiddenScheme) {
+            errors.push(
+              `Forbidden executable URI scheme "${forbiddenScheme}" in ${attr.name} on HTML route "${route}" (${relPath}). Site enforces zero client-side JavaScript.`
+            );
           }
         }
       }
     }
-  }
 
-  walk(distDir);
+    const cspResult = validateMetaCsp(content);
+    for (const cspErr of cspResult.errors) {
+      errors.push(`${cspErr} Route "${route}" (${relPath}).`);
+    }
+  }
 
   for (const jsFile of allJsFiles) {
     errors.push(`Forbidden client JavaScript file in dist: ${jsFile}`);

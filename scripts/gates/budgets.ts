@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
+import { walkFiles } from './shared.ts';
 
 export interface BudgetConfig {
   pageBudgets: {
@@ -131,12 +132,8 @@ export function checkBudgets(
 
   const fontsDir = path.join(distDir, 'fonts');
   let totalWoff2Bytes = 0;
-  if (fs.existsSync(fontsDir)) {
-    for (const f of fs.readdirSync(fontsDir)) {
-      if (f.endsWith('.woff2')) {
-        totalWoff2Bytes += fs.statSync(path.join(fontsDir, f)).size;
-      }
-    }
+  for (const fontFile of walkFiles(fontsDir, '.woff2')) {
+    totalWoff2Bytes += fs.statSync(fontFile).size;
   }
 
   const woff2Budget = budgetConfig.assetBudgets?.totalWoff2Bytes;
@@ -154,13 +151,9 @@ export function checkBudgets(
 
   let totalJsGzipBytes = 0;
   const astroDir = path.join(distDir, '_astro');
-  if (fs.existsSync(astroDir)) {
-    for (const f of fs.readdirSync(astroDir)) {
-      if (f.endsWith('.js') || f.endsWith('.mjs')) {
-        const raw = fs.readFileSync(path.join(astroDir, f));
-        totalJsGzipBytes += zlib.gzipSync(raw).length;
-      }
-    }
+  for (const jsFile of walkFiles(astroDir, ['.js', '.mjs'])) {
+    const raw = fs.readFileSync(jsFile);
+    totalJsGzipBytes += zlib.gzipSync(raw).length;
   }
 
   const jsBudget = budgetConfig.assetBudgets?.totalJsGzipBytes;
@@ -176,55 +169,45 @@ export function checkBudgets(
     }
   }
 
-  function walkHtml(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        walkHtml(fullPath);
-      } else if (entry.isFile() && entry.name.endsWith('.html')) {
-        const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
-        const raw = fs.readFileSync(fullPath);
-        const htmlContent = raw.toString('utf8');
-        const { cssAssets, jsAssets } = extractPageAssets(htmlContent);
-        const pageType = getPageType(relPath);
+  for (const fullPath of walkFiles(distDir, '.html')) {
+    const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
+    const raw = fs.readFileSync(fullPath);
+    const htmlContent = raw.toString('utf8');
+    const { cssAssets, jsAssets } = extractPageAssets(htmlContent);
+    const pageType = getPageType(relPath);
 
-        if (!pageType || !budgetConfig.pageBudgets?.[pageType]) {
-          errors.push(`Unbudgeted HTML route "${relPath}" has no matching entry in budgets.json.`);
-          continue;
-        }
+    if (!pageType || !budgetConfig.pageBudgets?.[pageType]) {
+      errors.push(`Unbudgeted HTML route "${relPath}" has no matching entry in budgets.json.`);
+      continue;
+    }
 
-        const budget = budgetConfig.pageBudgets[pageType];
-        const htmlGzipBytes = zlib.gzipSync(raw).length;
+    const budget = budgetConfig.pageBudgets[pageType];
+    const htmlGzipBytes = zlib.gzipSync(raw).length;
 
-        let pageCssGzipBytes = 0;
-        for (const cssRef of cssAssets) {
-          pageCssGzipBytes += getAssetGzipSize(cssRef);
-        }
+    let pageCssGzipBytes = 0;
+    for (const cssRef of cssAssets) {
+      pageCssGzipBytes += getAssetGzipSize(cssRef);
+    }
 
-        let pageJsGzipBytes = 0;
-        for (const jsRef of jsAssets) {
-          pageJsGzipBytes += getAssetGzipSize(jsRef);
-        }
+    let pageJsGzipBytes = 0;
+    for (const jsRef of jsAssets) {
+      pageJsGzipBytes += getAssetGzipSize(jsRef);
+    }
 
-        const combinedCompressed = htmlGzipBytes + pageCssGzipBytes + pageJsGzipBytes;
+    const combinedCompressed = htmlGzipBytes + pageCssGzipBytes + pageJsGzipBytes;
 
-        const metricKey = `page:${pageType}:${relPath}`;
-        metrics[metricKey] = {
-          measured: combinedCompressed,
-          max: budget.maxCompressedBytes,
-        };
+    const metricKey = `page:${pageType}:${relPath}`;
+    metrics[metricKey] = {
+      measured: combinedCompressed,
+      max: budget.maxCompressedBytes,
+    };
 
-        if (combinedCompressed > budget.maxCompressedBytes) {
-          errors.push(
-            `Page "${relPath}" (${pageType}) exceeded weight budget: ${combinedCompressed} B (HTML ${htmlGzipBytes} B + CSS ${pageCssGzipBytes} B + JS ${pageJsGzipBytes} B) > ${budget.maxCompressedBytes} B limit.`
-          );
-        }
-      }
+    if (combinedCompressed > budget.maxCompressedBytes) {
+      errors.push(
+        `Page "${relPath}" (${pageType}) exceeded weight budget: ${combinedCompressed} B (HTML ${htmlGzipBytes} B + CSS ${pageCssGzipBytes} B + JS ${pageJsGzipBytes} B) > ${budget.maxCompressedBytes} B limit.`
+      );
     }
   }
-
-  walkHtml(distDir);
 
   return {
     ok: errors.length === 0,

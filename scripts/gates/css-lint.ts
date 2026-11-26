@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { walkFiles } from './shared.ts';
+
+export { walkFiles };
 
 export interface CssLintResult {
   ok: boolean;
@@ -434,23 +437,6 @@ export function lintTsScriptContent(tsContent: string, fileName: string): string
   }
 
   return errors;
-}
-
-export function walkFiles(dir: string, extension: string): string[] {
-  if (!fs.existsSync(dir)) return [];
-  const results: string[] = [];
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      results.push(...walkFiles(fullPath, extension));
-    } else if (entry.isFile() && entry.name.endsWith(extension)) {
-      results.push(fullPath);
-    }
-  }
-
-  return results;
 }
 
 export function lintAstroFiles(srcDir: string): string[] {

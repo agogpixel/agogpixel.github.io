@@ -106,11 +106,11 @@ export function validateWorkflowContent(
           : '';
       const normalizedCancel = cancelInProgress.replace(/\s+/g, ' ').trim();
       if (
-        normalizedCancel !== "${{ github.workflow == 'CI' }}" &&
-        normalizedCancel !== '${{ github.workflow == "CI" }}'
+        normalizedCancel !== "${{ github.event_name == 'pull_request' }}" &&
+        normalizedCancel !== '${{ github.event_name == "pull_request" }}'
       ) {
         errors.push(
-          `${fileName}: CI concurrency must specify caller-isolated 'cancel-in-progress: \${{ github.workflow == \\'CI\\' }}'. Found: '${cancelInProgress}'.`
+          `${fileName}: CI concurrency must specify PR-only cancellation 'cancel-in-progress: \${{ github.event_name == \\'pull_request\\' }}'. Found: '${cancelInProgress}'.`
         );
       }
     }

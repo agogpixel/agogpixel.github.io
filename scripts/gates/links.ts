@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { routeFromHtmlPath } from './zero-js.ts';
-import { SITE_ORIGIN, decodeHtmlEntities, detectForbiddenUriScheme } from './shared.ts';
+import { SITE_ORIGIN, decodeHtmlEntities, detectForbiddenUriScheme, walkFiles } from './shared.ts';
 
 export interface LinkCheckResult {
   ok: boolean;
@@ -75,145 +75,121 @@ export function checkLinksAndAnchors(
 
   const htmlPages = new Map<string, Set<string>>();
   const staticFiles = new Set<string>();
+  const htmlDocs: Array<{ relPath: string; route: string; content: string }> = [];
 
-  function indexFiles(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        indexFiles(fullPath);
-      } else if (entry.isFile()) {
-        const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
-        staticFiles.add('/' + relPath);
+  for (const fullPath of walkFiles(distDir)) {
+    const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
+    staticFiles.add('/' + relPath);
 
-        if (relPath.endsWith('.html')) {
-          const route = routeFromHtmlPath(relPath);
-          const content = fs.readFileSync(fullPath, 'utf8');
-          const { anchors } = extractHtmlLinksAndAnchors(content);
-          htmlPages.set(route, new Set(anchors));
+    if (relPath.endsWith('.html')) {
+      const route = routeFromHtmlPath(relPath);
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const { anchors } = extractHtmlLinksAndAnchors(content);
+      htmlPages.set(route, new Set(anchors));
+      htmlDocs.push({ relPath, route, content });
+    }
+  }
+
+  for (const { relPath, route: currentRoute, content } of htmlDocs) {
+    const { links, ariaReferences } = extractHtmlLinksAndAnchors(content);
+    const currentAnchors = htmlPages.get(currentRoute) || new Set<string>();
+
+    for (const ref of ariaReferences) {
+      if (!currentAnchors.has(ref.targetId)) {
+        errors.push(
+          `Broken ARIA reference in page "${currentRoute}" (${relPath}): ${ref.attribute} references ID "${ref.targetId}" which does not exist in the document.`
+        );
+      }
+    }
+
+    for (const href of links) {
+      const forbiddenScheme = detectForbiddenUriScheme(href);
+      if (forbiddenScheme) {
+        errors.push(
+          `Forbidden executable URI scheme "${forbiddenScheme}" in <a href="${href}"> on page "${currentRoute}" (${relPath}).`
+        );
+        continue;
+      }
+
+      if (/^(mailto:|tel:)/i.test(href)) {
+        continue;
+      }
+
+      if (/^(https?:)?\/\//i.test(href)) {
+        try {
+          const parsed = new URL(href, siteOrigin);
+          if (parsed.origin !== siteOrigin) {
+            continue;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      linksChecked++;
+
+      let targetPath = '';
+      let fragment = '';
+
+      if (href.startsWith('#')) {
+        targetPath = currentRoute;
+        fragment = href.slice(1);
+      } else {
+        let urlToParse = href;
+        if (urlToParse.startsWith(siteOrigin)) {
+          urlToParse = urlToParse.slice(siteOrigin.length);
+        }
+        const hashIndex = urlToParse.indexOf('#');
+        if (hashIndex !== -1) {
+          targetPath = urlToParse.slice(0, hashIndex);
+          fragment = urlToParse.slice(hashIndex + 1);
+        } else {
+          targetPath = urlToParse;
+        }
+
+        if (!targetPath.startsWith('/')) {
+          targetPath = path.posix.join(currentRoute, targetPath);
+        }
+      }
+
+      const qIndex = targetPath.indexOf('?');
+      if (qIndex !== -1) {
+        targetPath = targetPath.slice(0, qIndex);
+      }
+
+      const hasExtension = /\.[a-z0-9]+$/i.test(targetPath);
+      const isStaticFile = staticFiles.has(targetPath);
+
+      if (!hasExtension && !isStaticFile && !targetPath.endsWith('/')) {
+        errors.push(
+          `Internal link "${href}" on page "${currentRoute}" violates trailing-slash requirement (target: "${targetPath}"). Must end with "/".`
+        );
+      }
+
+      if (isStaticFile) {
+        // Verified present in dist
+      } else if (hasExtension) {
+        if (!staticFiles.has(targetPath)) {
+          errors.push(
+            `Broken internal link "${href}" on page "${currentRoute}": file "${targetPath}" not found in dist.`
+          );
+        }
+      } else {
+        const normalizedTarget = targetPath.endsWith('/') ? targetPath : targetPath + '/';
+        const targetAnchors = htmlPages.get(normalizedTarget);
+
+        if (!targetAnchors) {
+          errors.push(
+            `Broken internal link "${href}" on page "${currentRoute}": target route "${normalizedTarget}" does not exist in dist.`
+          );
+        } else if (fragment && !targetAnchors.has(fragment)) {
+          errors.push(
+            `Broken anchor "${href}" on page "${currentRoute}": anchor "#${fragment}" does not exist in route "${normalizedTarget}".`
+          );
         }
       }
     }
   }
-
-  indexFiles(distDir);
-
-  function validateLinks(currentDir: string) {
-    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry.name);
-      if (entry.isDirectory()) {
-        validateLinks(fullPath);
-      } else if (entry.isFile()) {
-        const relPath = path.relative(distDir, fullPath).replace(/\\/g, '/');
-
-        if (relPath.endsWith('.html')) {
-          const currentRoute = routeFromHtmlPath(relPath);
-          const content = fs.readFileSync(fullPath, 'utf8');
-          const { links, ariaReferences } = extractHtmlLinksAndAnchors(content);
-          const currentAnchors = htmlPages.get(currentRoute) || new Set<string>();
-
-          for (const ref of ariaReferences) {
-            if (!currentAnchors.has(ref.targetId)) {
-              errors.push(
-                `Broken ARIA reference in page "${currentRoute}" (${relPath}): ${ref.attribute} references ID "${ref.targetId}" which does not exist in the document.`
-              );
-            }
-          }
-
-          for (const href of links) {
-            const forbiddenScheme = detectForbiddenUriScheme(href);
-            if (forbiddenScheme) {
-              errors.push(
-                `Forbidden executable URI scheme "${forbiddenScheme}" in <a href="${href}"> on page "${currentRoute}" (${relPath}).`
-              );
-              continue;
-            }
-
-            if (/^(mailto:|tel:)/i.test(href)) {
-              continue;
-            }
-
-            if (/^(https?:)?\/\//i.test(href)) {
-              try {
-                const parsed = new URL(href, siteOrigin);
-                if (parsed.origin !== siteOrigin) {
-                  continue;
-                }
-              } catch {
-                continue;
-              }
-            }
-
-            linksChecked++;
-
-            let targetPath = '';
-            let fragment = '';
-
-            if (href.startsWith('#')) {
-              targetPath = currentRoute;
-              fragment = href.slice(1);
-            } else {
-              let urlToParse = href;
-              if (urlToParse.startsWith(siteOrigin)) {
-                urlToParse = urlToParse.slice(siteOrigin.length);
-              }
-              const hashIndex = urlToParse.indexOf('#');
-              if (hashIndex !== -1) {
-                targetPath = urlToParse.slice(0, hashIndex);
-                fragment = urlToParse.slice(hashIndex + 1);
-              } else {
-                targetPath = urlToParse;
-              }
-
-              if (!targetPath.startsWith('/')) {
-                targetPath = path.posix.join(currentRoute, targetPath);
-              }
-            }
-
-            const qIndex = targetPath.indexOf('?');
-            if (qIndex !== -1) {
-              targetPath = targetPath.slice(0, qIndex);
-            }
-
-            const hasExtension = /\.[a-z0-9]+$/i.test(targetPath);
-            const isStaticFile = staticFiles.has(targetPath);
-
-            if (!hasExtension && !isStaticFile && !targetPath.endsWith('/')) {
-              errors.push(
-                `Internal link "${href}" on page "${currentRoute}" violates trailing-slash requirement (target: "${targetPath}"). Must end with "/".`
-              );
-            }
-
-            if (isStaticFile) {
-              // Verified present in dist
-            } else if (hasExtension) {
-              if (!staticFiles.has(targetPath)) {
-                errors.push(
-                  `Broken internal link "${href}" on page "${currentRoute}": file "${targetPath}" not found in dist.`
-                );
-              }
-            } else {
-              const normalizedTarget = targetPath.endsWith('/') ? targetPath : targetPath + '/';
-              const targetAnchors = htmlPages.get(normalizedTarget);
-
-              if (!targetAnchors) {
-                errors.push(
-                  `Broken internal link "${href}" on page "${currentRoute}": target route "${normalizedTarget}" does not exist in dist.`
-                );
-              } else if (fragment && !targetAnchors.has(fragment)) {
-                errors.push(
-                  `Broken anchor "${href}" on page "${currentRoute}": anchor "#${fragment}" does not exist in route "${normalizedTarget}".`
-                );
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  validateLinks(distDir);
 
   return {
     ok: errors.length === 0,

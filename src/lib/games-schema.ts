@@ -5,6 +5,7 @@ export const MAX_GAME_SLUG_LENGTH = 60;
 
 export const ITCH_EMBED_ORIGIN = 'https://itch.io';
 export const STEAM_WIDGET_ORIGIN = 'https://store.steampowered.com';
+export const ITCH_URL_HOST_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.itch\.io$/i;
 
 export const ITCH_EMBED_WIDTH = 552;
 export const ITCH_EMBED_HEIGHT = 167;
@@ -29,6 +30,20 @@ export const httpsUrlSchema = z
     }
   }, 'URL must be a valid https:// URL');
 
+export const itchUrlSchema = httpsUrlSchema.refine((val) => {
+  try {
+    const parsed = new URL(val);
+    return (
+      !parsed.username &&
+      !parsed.password &&
+      !parsed.port &&
+      ITCH_URL_HOST_REGEX.test(parsed.hostname)
+    );
+  } catch {
+    return false;
+  }
+}, 'itchUrl must be an https://*.itch.io/ URL');
+
 export const gameBaseSchema = z
   .object({
     slug: z
@@ -44,7 +59,7 @@ export const gameBaseSchema = z
     draft: z.boolean().default(false),
     itchEmbedId: positiveIntIdSchema.optional(),
     steamAppId: positiveIntIdSchema.optional(),
-    itchUrl: httpsUrlSchema.optional(),
+    itchUrl: itchUrlSchema.optional(),
   })
   .strict();
 
